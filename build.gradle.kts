@@ -12,12 +12,13 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.0")
-    implementation("com.opencsv:opencsv:4.0")
+    implementation("com.opencsv:opencsv:5.5.2")
     testImplementation(kotlin("test"))
+    testImplementation("org.assertj:assertj-core:3.21.0")
 }
 
 tasks.test {
-    useJUnit()
+    useJUnitPlatform()
 }
 
 tasks.withType<KotlinCompile>() {
