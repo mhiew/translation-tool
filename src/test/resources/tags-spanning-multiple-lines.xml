@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="singleline">Tag on a single line</string>
+
+    <!-- these are valid within android strings.xml. I believe these newlines are technically ignored -->
+    <string name="multiline">End tag is on a new line
+    </string>
+
+</resources>

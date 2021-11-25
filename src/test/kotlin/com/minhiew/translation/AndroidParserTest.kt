@@ -18,4 +18,16 @@ class AndroidParserTest {
         val actual = AndroidFileParser.parse(fixture)
         assertThat(actual).isEqualTo(expected)
     }
+
+    @Test
+    fun `parses xml where tags span multiple lines`() {
+        val fixture = File("src/test/resources/tags-spanning-multiple-lines.xml".sanitizeFilePath())
+        val expected = mapOf(
+            "singleline" to "Tag on a single line",
+            "multiline" to "End tag is on a new line",
+        )
+
+        val actual = AndroidFileParser.parse(fixture)
+        assertThat(actual).isEqualTo(expected)
+    }
 }
