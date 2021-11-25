@@ -18,22 +18,10 @@ fun main(args: Array<String>) {
     println("Android strings: ${androidStringsPool.size}")
 
 
-    val iosStringsPool = mutableMapOf<String, String>()
     val iosFile = File(args[1])
-
     println("Parsing iOS file: ${iosFile.path} ...")
-
-    iosFile.forEachLine {
-        if (it.isNotBlank()) {
-            "\"(.+?)\" = \"(.+?)\";".toRegex().findAll(it).forEach {
-                val key = it.groupValues[1]
-                val value = it.groupValues[2]
-                iosStringsPool[key] = value
-            }
-        }
-    }
-    val iosStrings = iosStringsPool.toMap()
-    println("iOS strings: ${iosStrings.size}")
+    val iosStringsPool: MutableMap<String, String> = iOSFileParser.parse(iosFile).toMutableMap()
+    println("iOS strings: ${iosStringsPool.size}")
 
 
     findIdenticalValues(androidStringsPool, iosStringsPool)

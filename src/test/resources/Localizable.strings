@@ -1,0 +1,10 @@
+/*
+  Localizable.strings
+ */
+
+// MARK: Comments are Ignored
+"ok_button_title" = "OK";
+"send_button_title" = "Send";
+
+"welcome_placeholder" = "Welcome %@!";
+
