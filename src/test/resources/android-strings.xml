@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="web_link" translatable="false">https://www.test.com</string>
+
+    <!-- Comments get ignored -->
+    <string name="app_name" translatable="false">My App</string>
+    <string name="ok_button_title">OK</string>
+
+    <string name="welcome_placeholder">Welcome %@!</string>
+</resources>

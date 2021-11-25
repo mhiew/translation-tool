@@ -12,22 +12,10 @@ lateinit var exportFolder: File
 fun main(args: Array<String>) {
     exportFolder = File(args[2])
 
-    val androidStringsPool = mutableMapOf<String, String>()
     val androidFile = File(args[0])
-
     println("Parsing android file: ${androidFile.path} ...")
-
-    androidFile.forEachLine {
-        if (it.isNotBlank()) {
-            "<string.+?name=\"(.+?)\".*?>(.+?)</.+?>".toRegex().findAll(it).forEach {
-                val key = it.groupValues[1]
-                val value = it.groupValues[2]
-                androidStringsPool[key] = value
-            }
-        }
-    }
-    val androidStrings = androidStringsPool.toMap()
-    println("Android strings: ${androidStrings.size}")
+    val androidStringsPool: MutableMap<String, String> = AndroidFileParser.parse(androidFile).toMutableMap()
+    println("Android strings: ${androidStringsPool.size}")
 
 
     val iosStringsPool = mutableMapOf<String, String>()
