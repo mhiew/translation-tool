@@ -40,7 +40,7 @@ private fun findIdenticalValues(
 ) {
     println("Looking for identical strings ...")
     val identicalStrings = mutableMapOf<StringKey, String>()
-    androidStringsPool.forEach { androidKey, androidValue ->
+    androidStringsPool.forEach { (androidKey, androidValue) ->
         var key: StringKey? = null
         val value: String = androidValue
 
@@ -55,23 +55,17 @@ private fun findIdenticalValues(
     }
 
     println("Identical strings: ${identicalStrings.entries.size}. Separating from the remaining pools.")
-    identicalStrings.forEach { key, value ->
+    identicalStrings.keys.forEach { key ->
         androidStringsPool.remove(key.androidKey)
         iOsStringsPool.remove(key.iosKey)
     }
 
-    val file = File(exportFolder, "identical.csv")
-    if (file.exists()) file.delete()
-    val fileWriter = Files.newBufferedWriter(file.toPath(), Charset.forName("UTF-8"), StandardOpenOption.CREATE)
-    try {
-        val csvWriter = getCsvWriter(fileWriter)
-        val header = arrayOf("android key", "iOS key", "new key", "value")
-        csvWriter.writeNext(header)
-        identicalStrings.forEach { key, value ->
-            csvWriter.writeNext(arrayOf(key.androidKey, key.iosKey, "", value))
+    writeToCsv(fileName = "identical.csv") {
+        val header = arrayOf("android key", "iOS key", "value")
+        writeNext(header)
+        identicalStrings.forEach { (key, value) ->
+            writeNext(arrayOf(key.androidKey, key.iosKey, value))
         }
-    } finally {
-        fileWriter.flush()
     }
 }
 
@@ -81,10 +75,10 @@ private fun findIdenticalValuesCaseInsensitive(
 ) {
     println("Looking for identical strings case insensitive ...")
     val strings = mutableMapOf<StringKey, StringValue>()
-    androidStringsPool.forEach { androidKey, androidValue ->
+    androidStringsPool.forEach { (androidKey, androidValue) ->
 
-        iOsStringsPool.forEach loop@{ iosKey, iOsValue ->
-            if (androidValue.toLowerCase() == iOsValue.toAndroidString().toLowerCase()) {
+        iOsStringsPool.forEach loop@{ (iosKey, iOsValue) ->
+            if (androidValue.lowercase() == iOsValue.toAndroidString().lowercase()) {
                 val key = StringKey(androidKey, iosKey)
                 val value = StringValue(androidValue, iOsValue)
                 strings[key] = value
@@ -94,23 +88,17 @@ private fun findIdenticalValuesCaseInsensitive(
     }
 
     println("Identical case insensitive strings: ${strings.entries.size}. Separating from the remaining pools.")
-    strings.forEach { key, value ->
+    strings.keys.forEach { key ->
         androidStringsPool.remove(key.androidKey)
         iOsStringsPool.remove(key.iosKey)
     }
 
-    val file = File(exportFolder, "identical-cis.csv")
-    if (file.exists()) file.delete()
-    val fileWriter = Files.newBufferedWriter(file.toPath(), Charset.forName("UTF-8"), StandardOpenOption.CREATE)
-    try {
-        val csvWriter = getCsvWriter(fileWriter)
-        val header = arrayOf("android key", "iOS key", "new key", "android value", "iOS value")
-        csvWriter.writeNext(header)
-        strings.forEach { key, value ->
-            csvWriter.writeNext(arrayOf(key.androidKey, key.iosKey, "", value.androidValue, value.iosValue))
+    writeToCsv(fileName = "identical-cis.csv") {
+        val header = arrayOf("android key", "iOS key", "android value", "iOS value")
+        writeNext(header)
+        strings.forEach { (key, value) ->
+            writeNext(arrayOf(key.androidKey, key.iosKey, value.androidValue, value.iosValue))
         }
-    } finally {
-        fileWriter.flush()
     }
 }
 
@@ -121,8 +109,8 @@ private fun findSimilarValues(
     val maxPercent = 10
     println("Looking for similar strings with tolerance of $maxPercent% ...")
     val similarStrings = mutableMapOf<StringKey, StringValue>()
-    androidStringsPool.forEach { androidKey, androidValue ->
-        iOsStringsPool.forEach loop@{ iosKey, iOsValue ->
+    androidStringsPool.forEach { (androidKey, androidValue) ->
+        iOsStringsPool.forEach loop@{ (iosKey, iOsValue) ->
             val levenshtein = Levenshtein.calculate(androidValue, iOsValue.toAndroidString())
             val percent = levenshtein.toFloat() / androidValue.length
             if (percent < (maxPercent.toFloat() / 100.0)) {
@@ -135,49 +123,45 @@ private fun findSimilarValues(
     }
 
     println("Similar strings: ${similarStrings.entries.size}. Separating from the remaining pools.")
-    similarStrings.forEach { key, value ->
+    similarStrings.keys.forEach { key ->
         androidStringsPool.remove(key.androidKey)
         iOsStringsPool.remove(key.iosKey)
     }
 
-    val file = File(exportFolder, "similar.csv")
-    if (file.exists()) file.delete()
-    val fileWriter = Files.newBufferedWriter(file.toPath(), Charset.forName("UTF-8"), StandardOpenOption.CREATE)
-    try {
-        val scvWriter = getCsvWriter(fileWriter)
+    writeToCsv(fileName = "similar.csv") {
         val header = arrayOf("android key", "android value", "iOS key", "iOS value")
-        scvWriter.writeNext(header)
-        similarStrings.forEach { key, value ->
-            scvWriter.writeNext(arrayOf(key.androidKey, value.androidValue, key.iosKey, value.iosValue))
+        writeNext(header)
+        similarStrings.forEach { (key, value) ->
+            writeNext(arrayOf(key.androidKey, value.androidValue, key.iosKey, value.iosValue))
         }
-    } finally {
-        fileWriter.flush()
     }
 }
 
 private fun writeRemainingValues(androidStringsPool: Map<String, String>, iOsStringsPool: Map<String, String>) {
     println("Writing remaining strings to csv ...")
-    val file = File(exportFolder, "remaining.csv")
-    if (file.exists()) file.delete()
-    val fileWriter = Files.newBufferedWriter(file.toPath(), Charset.forName("UTF-8"), StandardOpenOption.CREATE)
-    try {
-        val csvWriter = getCsvWriter(fileWriter)
+    writeToCsv(fileName = "remaining.csv") {
         val header = arrayOf("android key", "android value", "iOS key", "iOS value")
-        csvWriter.writeNext(header)
+        writeNext(header)
 
-        androidStringsPool.forEach { key, value ->
-            csvWriter.writeNext(arrayOf(key, value, "", ""))
+        androidStringsPool.forEach { (key, value) ->
+            writeNext(arrayOf(key, value, "", ""))
         }
 
-        iOsStringsPool.forEach { key, value ->
-            csvWriter.writeNext(arrayOf("", "", key, value))
+        iOsStringsPool.forEach { (key, value) ->
+            writeNext(arrayOf("", "", key, value))
         }
-    } finally {
-        fileWriter.flush()
     }
 }
 
-fun getCsvWriter(writer: Writer): CSVWriter {
+//helper function to write to csv
+private fun writeToCsv(outputFolder: File = exportFolder, fileName: String, lambda: CSVWriter.() -> Unit) {
+    val file = File(outputFolder, fileName)
+    if (file.exists()) file.delete()
+    val fileWriter = Files.newBufferedWriter(file.toPath(), Charset.forName("UTF-8"), StandardOpenOption.CREATE)
+    getCsvWriter(fileWriter).use(lambda)
+}
+
+private fun getCsvWriter(writer: Writer): CSVWriter {
     return CSVWriter(
         writer,
         '\t',
