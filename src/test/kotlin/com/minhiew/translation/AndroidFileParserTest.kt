@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.io.File
 
-class AndroidParserTest {
+class AndroidFileParserTest {
     @Test
     fun `parses android strings xml file`() {
         val fixture = File("src/test/resources/android-strings.xml".sanitizeFilePath())
@@ -12,7 +12,10 @@ class AndroidParserTest {
             "web_link" to "https://www.test.com",
             "app_name" to "My App",
             "ok_button_title" to "OK",
-            "welcome_placeholder" to "Welcome %@!"
+            "welcome_placeholder" to "Welcome %@!",
+            "weird_apostrophe" to "We’re excited to to use the weird apostrophe.",
+            "at_sign" to "Hey look at the & sign",
+            "special_characters" to "Übersetzungen À Paramètres"
         )
 
         val actual = AndroidFileParser.parse(fixture)
