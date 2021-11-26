@@ -13,7 +13,8 @@ repositories {
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.0")
     implementation("com.opencsv:opencsv:5.5.2")
-    implementation("org.dom4j:dom4j:2.1.3")
+    implementation("org.dom4j:dom4j:2.1.1")
+    implementation("jaxen:jaxen:1.2.0")
 
     testImplementation(kotlin("test"))
     testImplementation("org.assertj:assertj-core:3.21.0")

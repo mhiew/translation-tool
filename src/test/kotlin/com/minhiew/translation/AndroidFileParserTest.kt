@@ -33,4 +33,16 @@ class AndroidFileParserTest {
         val actual = AndroidFileParser.parse(fixture)
         assertThat(actual).isEqualTo(expected)
     }
+
+    @Test
+    fun `xml comments are not stripped during parsing`() {
+        val fixture = File("src/test/resources/android-strings.xml".sanitizeFilePath())
+        val document = AndroidFileParser.getDocument(fixture)
+
+        val comments = document.selectNodes("//comment()")
+        assertThat(comments).hasSize(2)
+        assertThat(comments[0].asXML()).isEqualTo("<!-- Comments are not stripped -->")
+        assertThat(comments[1].asXML()).isEqualTo("<!-- Second Comment -->")
+    }
+
 }

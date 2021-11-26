@@ -2,12 +2,13 @@
 <resources>
     <string name="web_link" translatable="false">https://www.test.com</string>
 
-    <!-- Comments get ignored -->
+    <!-- Comments are not stripped -->
     <string name="app_name" translatable="false">My App</string>
     <string name="ok_button_title">OK</string>
 
     <string name="welcome_placeholder">Welcome %@!</string>
 
+    <!-- Second Comment -->
     <string name="weird_apostrophe">We’re excited to to use the weird apostrophe.</string>
     <string name="at_sign">Hey look at the &amp; sign</string>
 
