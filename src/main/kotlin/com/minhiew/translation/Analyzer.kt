@@ -38,6 +38,8 @@ data class LocalizationReport(
             )
         }
     }
+
+    val differences: List<StringComparison> = stringComparisons.values.filterNot { it.isExactMatch }
 }
 
 data class StringComparison(

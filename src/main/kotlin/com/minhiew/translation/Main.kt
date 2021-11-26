@@ -1,6 +1,8 @@
 package com.minhiew.translation
 
 import com.opencsv.CSVWriter
+import org.dom4j.io.OutputFormat
+import org.dom4j.io.XMLWriter
 import java.io.File
 import java.io.Writer
 import java.nio.charset.Charset
@@ -30,6 +32,8 @@ fun main(args: Array<String>) {
     writeUniqueIOSStrings(report)
     writeExactMatches(report)
     writeDifferences(report)
+
+    writeFixedAndroidXmlFile(androidStringsFile = androidFile, report = report)
 }
 
 private fun writeUniqueAndroidStrings(report: LocalizationReport) {
@@ -82,6 +86,28 @@ private fun writeDifferences(report: LocalizationReport) {
         differences.forEach {
             writeNext(arrayOf(it.key, it.androidValue, it.iosValue, it.levenshteinDistance.toString(), it.levenshteinPercentage.toString(), it.isCaseInsensitiveMatch.toString()))
         }
+    }
+}
+
+private fun writeFixedAndroidXmlFile(fileOutputFolder: File = outputFolder, androidStringsFile: File, report: LocalizationReport) {
+    if (report.differences.isEmpty()) {
+        println("Platform localizations match for shared keys!")
+        return
+    }
+
+    println("Generating corrected android strings file with mismatched text replaced with ios values.")
+    val correctedAndroidStrings = AndroidTranslationGenerator.generateFixedAndroidXML(androidStringsFile, report)
+
+    val outputFile = File(fileOutputFolder, "strings.xml")
+    if (outputFile.exists()) outputFile.delete()
+    val fileWriter = Files.newBufferedWriter(outputFile.toPath(), Charset.forName("UTF-8"), StandardOpenOption.CREATE)
+    fileWriter.use {
+        val outputFormat = OutputFormat().apply {
+            isExpandEmptyElements = true
+        }
+        val xmlWriter = XMLWriter(it, outputFormat)
+        xmlWriter.write(correctedAndroidStrings)
+        xmlWriter.close()
     }
 }
 
