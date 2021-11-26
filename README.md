@@ -14,9 +14,14 @@ This will be customized to report differences in resource keys between platforms
 Just download a released jar and execute
 
 ```
-java -jar build/libs/android-ios-strings-merger-1.0.jar <path_to_android_file> <path_to_ios_file> <path_to_export_folder>
+java -jar build/libs/android-ios-strings-merger-1.0.jar <path_to_android_file> <path_to_ios_file> <path_to_output_folder>
 ```
 
 ## Output
 
-Export folder must exist. It will create csv files that you can easily import to any excel-like app.
+It will create csv files for:
+
+* strings that only exist on android `unique-android-strings.csv`
+* strings that only exist on iOS `unique-ios-strings.csv`
+* strings that match exactly on each platform `exact-matches.csv`
+* strings that are different `differences.csv`
