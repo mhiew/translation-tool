@@ -22,7 +22,7 @@ object AndroidTranslationGenerator {
             val stringElementXPATH = "string[@name='${comparison.key}']"
             val node = rootElement.selectSingleNode(stringElementXPATH)
             if (node != null) {
-                node.text = comparison.iosValue
+                node.text = AndroidValueSanitizer.sanitizeInput(comparison.iosValue)
             }
         }
 

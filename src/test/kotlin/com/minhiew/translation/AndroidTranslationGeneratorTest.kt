@@ -13,11 +13,13 @@ class AndroidTranslationGeneratorTest {
     |    <!-- Comments are not stripped -->
     |    <string name="shared_key_1">To Be Replaced 1</string>
     |    <string name="shared_key_2">To Be Replaced 2</string>
+    |    <string name="shared_key_3">To Be Replaced 2</string>
     |</resources>""".trimMargin()
 
     private val differences = listOf<StringComparison>(
         generateFakeComparison(key = "shared_key_1", androidValue = "To Be Replaced 1", iosValue = "ios replacement 1"),
-        generateFakeComparison(key = "shared_key_2", androidValue = "To Be Replaced 2", iosValue = "ios replacement yay")
+        generateFakeComparison(key = "shared_key_2", androidValue = "To Be Replaced 2", iosValue = "ios replacement yay"),
+        generateFakeComparison(key = "shared_key_3", androidValue = "To Be Replaced 3", iosValue = "ios values sanitized %@, %d and %s")
     )
 
     @Test
@@ -30,6 +32,7 @@ class AndroidTranslationGeneratorTest {
         |    <!-- Comments are not stripped -->
         |    <string name="shared_key_1">ios replacement 1</string>
         |    <string name="shared_key_2">ios replacement yay</string>
+        |    <string name="shared_key_3">ios values sanitized %@, %@ and %@</string>
         |</resources>""".trimMargin()
 
         val actual = AndroidTranslationGenerator.generateFixedAndroidXML(StringReader(originalXML), differences)
