@@ -7,4 +7,9 @@
     <string name="multiline">End tag is on a new line
     </string>
 
+    <!-- Plurals are ignored -->
+    <plurals name="cat">
+        <item name="one">cat</item>
+        <item name="other">cats</item>
+    </plurals>
 </resources>
