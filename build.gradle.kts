@@ -15,6 +15,7 @@ dependencies {
     implementation("com.opencsv:opencsv:5.5.2")
     implementation("org.dom4j:dom4j:2.1.1")
     implementation("jaxen:jaxen:1.2.0")
+    implementation("io.github.config4k:config4k:0.4.2")
 
     testImplementation(kotlin("test"))
     testImplementation("org.assertj:assertj-core:3.21.0")

@@ -1,6 +1,8 @@
 package com.minhiew.translation
 
 import com.opencsv.CSVWriter
+import com.typesafe.config.ConfigFactory
+import io.github.config4k.extract
 import org.dom4j.io.OutputFormat
 import org.dom4j.io.XMLWriter
 import java.io.File
@@ -9,27 +11,39 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 
+private const val DEFAULT_CONFIG_FILE = "translation-tool.conf"
 private const val UNIQUE_ANDROID_STRINGS_FILE = "unique-android-strings.csv"
 private const val UNIQUE_IOS_STRINGS_FILE = "unique-ios-strings.csv"
 private const val EXACT_MATCH_FILE = "exact-matches.csv"
 private const val DIFFERENCES_FILE = "differences.csv"
 
-lateinit var outputFolder: File
-private var blockPlaceholderMismatch: Boolean = true //TODO - set on configuration
+private lateinit var outputFolder: File
+private var blockPlaceholderMismatch: Boolean = true
 
 fun main(args: Array<String>) {
-    outputFolder = File(args[2])
+    val configFile = DEFAULT_CONFIG_FILE
+    val config = ConfigFactory.parseFile(File(DEFAULT_CONFIG_FILE))
+    println("Loading $configFile contents: $config\n")
+    val appConfig = config.extract<AppConfig>()
+    println("Parsed Config: $appConfig\n")
+
+    outputFolder = appConfig.outputDirectory
     if (!outputFolder.exists()) {
         outputFolder.mkdir()
     }
 
-    val androidFile = File(args[0])
-    val iosFile = File(args[1])
+    blockPlaceholderMismatch = appConfig.blockPlaceholderMismatch
 
-    compareStrings(androidFile = androidFile, iosFile = iosFile)
+    syncLanguage(appConfig.main)
 }
 
-private fun compareStrings(androidFile: File, iosFile: File) {
+private fun syncLanguage(bundle: LocalizationBundle) {
+    syncStrings(language = bundle.language, androidFile = bundle.androidFile, iosFile = bundle.iosFile)
+}
+
+private fun syncStrings(language: String, androidFile: File, iosFile: File) {
+    println("Synchronizing language: $language for Android: $androidFile from iOS: $iosFile")
+
     val androidStrings: Map<String, String> = AndroidFileParser.parse(androidFile)
     println("Total Android strings: ${androidStrings.size}")
 
