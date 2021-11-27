@@ -17,9 +17,9 @@ class AndroidTranslationGeneratorTest {
     |</resources>""".trimMargin()
 
     private val differences = listOf<StringComparison>(
-        generateFakeComparison(key = "shared_key_1", androidValue = "To Be Replaced 1", iosValue = "ios replacement 1"),
-        generateFakeComparison(key = "shared_key_2", androidValue = "To Be Replaced 2", iosValue = "ios replacement yay"),
-        generateFakeComparison(key = "shared_key_3", androidValue = "To Be Replaced 3", iosValue = "ios values sanitized %@, %d and %s")
+        StringComparison(key = "shared_key_1", androidValue = "To Be Replaced 1", iosValue = "ios replacement 1"),
+        StringComparison(key = "shared_key_2", androidValue = "To Be Replaced 2", iosValue = "ios replacement yay"),
+        StringComparison(key = "shared_key_3", androidValue = "To Be Replaced 3", iosValue = "ios values sanitized %@, %d and %s")
     )
 
     @Test
@@ -65,13 +65,4 @@ class AndroidTranslationGeneratorTest {
 
         assertThat(actual.asXML()).isEqualTo(expected)
     }
-
-    private fun generateFakeComparison(key: String, androidValue: String, iosValue: String) = StringComparison(
-        key = key,
-        androidValue = androidValue,
-        iosValue = iosValue,
-        // the following don't matter at this point
-        isExactMatch = false,
-        isCaseInsensitiveMatch = false,
-    )
 }

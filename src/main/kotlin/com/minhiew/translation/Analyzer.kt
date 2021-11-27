@@ -26,15 +26,15 @@ data class LocalizationReport(
         key to StringComparison(
             key = key,
             androidValue = androidValue,
-            iosValue = iosValue,
-            isExactMatch = androidValue == iosValue,
-            isCaseInsensitiveMatch = androidValue != iosValue && androidValue.lowercase() == iosValue.lowercase(),
+            iosValue = iosValue
         )
     }
 
     val differences: List<StringComparison> = stringComparisons.values.filterNot { it.isExactMatch }
 
     val exactMatches: List<StringComparison> = stringComparisons.values.filter { it.isExactMatch }
+
+    val caseInsensitiveMatches: List<StringComparison> = stringComparisons.values.filter { it.isCaseInsensitiveMatch }
 
     val mismatchedPlaceholders: List<StringComparison> = differences.filter { it.hasMismatchedPlaceholders }
 }
@@ -43,9 +43,10 @@ data class StringComparison(
     val key: String,
     val androidValue: String,
     val iosValue: String,
-    val isExactMatch: Boolean,
-    val isCaseInsensitiveMatch: Boolean,
 ) {
+    val isExactMatch: Boolean = androidValue == iosValue
+    val isCaseInsensitiveMatch = !isExactMatch && androidValue.lowercase() == iosValue.lowercase()
+
     val iosPlaceholderCount: Int = iosValue.placeholderCount()
     val androidPlaceholderCount: Int = androidValue.placeholderCount()
     val hasMismatchedPlaceholders = iosPlaceholderCount != androidPlaceholderCount

@@ -164,29 +164,21 @@ class AnalyzerTest {
                     key = "common_key_0",
                     androidValue = "match exactly",
                     iosValue = "match exactly",
-                    isExactMatch = true,
-                    isCaseInsensitiveMatch = false,
                 ),
                 "common_key_1" to StringComparison(
                     key = "common_key_1",
                     androidValue = "match case insensitive",
                     iosValue = "match case Insensitive",
-                    isExactMatch = false,
-                    isCaseInsensitiveMatch = true,
                 ),
                 "common_key_2" to StringComparison(
                     key = "common_key_2",
                     androidValue = "Slightly different punctuation.",
                     iosValue = "Slightly different punctuation",
-                    isExactMatch = false,
-                    isCaseInsensitiveMatch = false,
                 ),
                 "common_key_3" to StringComparison(
                     key = "common_key_3",
                     androidValue = "indifferent",
                     iosValue = "quite different",
-                    isExactMatch = false,
-                    isCaseInsensitiveMatch = false,
                 ),
             )
 

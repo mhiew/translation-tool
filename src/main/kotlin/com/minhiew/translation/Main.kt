@@ -84,8 +84,7 @@ private fun writeDifferences(report: LocalizationReport) {
     val differences: List<StringComparison> = report.differences
         .sortedWith(compareBy({ !it.hasMismatchedPlaceholders }, { !it.isCaseInsensitiveMatch }, { it.key }))
 
-    val caseInsensitiveMatches: List<StringComparison> = differences.filter { it.isCaseInsensitiveMatch }
-    println("Total Differences: ${differences.size} Case Sensitive: ${caseInsensitiveMatches.size}, Other: ${differences.size - caseInsensitiveMatches.size}")
+    println("Total Differences: ${differences.size}")
 
     val numberOfWarnings = report.mismatchedPlaceholders.size
     if (numberOfWarnings > 0) {
