@@ -2,12 +2,9 @@ package com.minhiew.translation
 
 import java.io.BufferedReader
 import java.io.File
-import java.io.StringReader
 
-object iOSFileParser {
+object IOSFileParser {
     fun parse(file: File): Map<String, String> = parse(file.bufferedReader())
-
-    fun parse(fileContents: String): Map<String, String> = parse(BufferedReader(StringReader(fileContents)))
 
     fun parse(fileContents: BufferedReader): Map<String, String> {
         val result = mutableMapOf<String, String>()

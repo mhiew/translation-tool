@@ -1,9 +1,5 @@
 package com.minhiew.translation
 
-import org.apache.commons.text.similarity.LevenshteinDistance
-import kotlin.math.absoluteValue
-import kotlin.math.max
-
 object Analyzer {
     fun compare(androidStrings: Map<String, String>, iosStrings: Map<String, String>): LocalizationReport {
         return LocalizationReport(
@@ -34,12 +30,13 @@ data class LocalizationReport(
                 iosValue = iosValue,
                 isExactMatch = androidValue == iosValue,
                 isCaseInsensitiveMatch = androidValue != iosValue && androidValue.lowercase() == iosValue.lowercase(),
-                levenshteinDistance = LevenshteinDistance.getDefaultInstance().apply(androidValue, iosValue).absoluteValue
             )
         }
     }
 
     val differences: List<StringComparison> = stringComparisons.values.filterNot { it.isExactMatch }
+
+    val exactMatches: List<StringComparison> = stringComparisons.values.filter { it.isExactMatch }
 }
 
 data class StringComparison(
@@ -48,19 +45,7 @@ data class StringComparison(
     val iosValue: String,
     val isExactMatch: Boolean,
     val isCaseInsensitiveMatch: Boolean,
-    val levenshteinDistance: Int
-) {
-    //calculates how close two strings are based on levenshtein distance
-    //a value of 1.0f means the strings match exactly
-    //a value of 0.7f means the strings match ~70%
-    val levenshteinPercentage: Float by lazy {
-        val maxLength = max(androidValue.length, iosValue.length).toFloat()
-        1f - (levenshteinDistance.toFloat() / maxLength)
-    }
-
-    //treat 10% difference as similar enough
-    fun isSimilar(): Boolean = levenshteinPercentage >= 0.9f
-}
+)
 
 //returns the keys within this map that do not belong to the other map
 fun Map<String, String>.filterForKeysNotPresentIn(other: Map<String, String>): Map<String, String> =

@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import java.io.File
 
-class iOSFileParserTest {
+class IOSFileParserTest {
     @Test
     fun `parses localizable strings file`() {
         val fixture = File("src/test/resources/Localizable.strings".sanitizeFilePath())
@@ -14,7 +14,7 @@ class iOSFileParserTest {
             "welcome_placeholder" to "Welcome %@!",
         )
 
-        val actual = iOSFileParser.parse(fixture)
+        val actual = IOSFileParser.parse(fixture)
         Assertions.assertThat(actual).isEqualTo(expected)
     }
 }

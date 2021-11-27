@@ -128,7 +128,6 @@ class AnalyzerTest {
                     iosValue = "match exactly",
                     isExactMatch = true,
                     isCaseInsensitiveMatch = false,
-                    levenshteinDistance = 0
                 ),
                 "common_key_1" to StringComparison(
                     key = "common_key_1",
@@ -136,7 +135,6 @@ class AnalyzerTest {
                     iosValue = "match case Insensitive",
                     isExactMatch = false,
                     isCaseInsensitiveMatch = true,
-                    levenshteinDistance = 1
                 ),
                 "common_key_2" to StringComparison(
                     key = "common_key_2",
@@ -144,7 +142,6 @@ class AnalyzerTest {
                     iosValue = "Slightly different punctuation",
                     isExactMatch = false,
                     isCaseInsensitiveMatch = false,
-                    levenshteinDistance = 1
                 ),
                 "common_key_3" to StringComparison(
                     key = "common_key_3",
@@ -152,7 +149,6 @@ class AnalyzerTest {
                     iosValue = "quite different",
                     isExactMatch = false,
                     isCaseInsensitiveMatch = false,
-                    levenshteinDistance = 5
                 ),
             )
 

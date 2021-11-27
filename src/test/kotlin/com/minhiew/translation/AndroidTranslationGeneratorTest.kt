@@ -47,6 +47,5 @@ class AndroidTranslationGeneratorTest {
         // the following don't matter at this point
         isExactMatch = false,
         isCaseInsensitiveMatch = false,
-        levenshteinDistance = 2
     )
 }
