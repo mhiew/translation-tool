@@ -18,25 +18,25 @@ data class LocalizationReport(
     val commonIosStrings: Map<String, String>,
 ) {
     //returns the common key to string comparison between ios and android
-    val stringComparisons: Map<String, StringComparison> by lazy {
-        commonAndroidStrings.entries.associate {
-            val key = it.key
-            val androidValue: String = it.value
-            val iosValue: String = commonIosStrings[key] ?: ""
+    val stringComparisons: Map<String, StringComparison> = commonAndroidStrings.entries.associate {
+        val key = it.key
+        val androidValue: String = it.value
+        val iosValue: String = commonIosStrings[key] ?: ""
 
-            key to StringComparison(
-                key = key,
-                androidValue = androidValue,
-                iosValue = iosValue,
-                isExactMatch = androidValue == iosValue,
-                isCaseInsensitiveMatch = androidValue != iosValue && androidValue.lowercase() == iosValue.lowercase(),
-            )
-        }
+        key to StringComparison(
+            key = key,
+            androidValue = androidValue,
+            iosValue = iosValue,
+            isExactMatch = androidValue == iosValue,
+            isCaseInsensitiveMatch = androidValue != iosValue && androidValue.lowercase() == iosValue.lowercase(),
+        )
     }
 
     val differences: List<StringComparison> = stringComparisons.values.filterNot { it.isExactMatch }
 
     val exactMatches: List<StringComparison> = stringComparisons.values.filter { it.isExactMatch }
+
+    val mismatchedPlaceholders: List<StringComparison> = differences.filter { it.hasMismatchedPlaceholders }
 }
 
 data class StringComparison(
@@ -45,7 +45,11 @@ data class StringComparison(
     val iosValue: String,
     val isExactMatch: Boolean,
     val isCaseInsensitiveMatch: Boolean,
-)
+) {
+    val iosPlaceholderCount: Int = iosValue.placeholderCount()
+    val androidPlaceholderCount: Int = androidValue.placeholderCount()
+    val hasMismatchedPlaceholders = iosPlaceholderCount != androidPlaceholderCount
+}
 
 //returns the keys within this map that do not belong to the other map
 fun Map<String, String>.filterForKeysNotPresentIn(other: Map<String, String>): Map<String, String> =
@@ -53,3 +57,23 @@ fun Map<String, String>.filterForKeysNotPresentIn(other: Map<String, String>): M
 
 fun Map<String, String>.filterForMatchingKeysIn(other: Map<String, String>): Map<String, String> =
     this.filterKeys { other.containsKey(it) }
+
+
+//calculates the total number of occurrences of placeholders
+fun String.placeholderCount(): Int = totalOccurrence(input = this, placeholders = setOf("%@", "%d", "%s", "%f"))
+
+private fun totalOccurrence(input: String, placeholders: Set<String>): Int {
+    return placeholders.fold(initial = 0) { acc, placeholder ->
+        acc + input.numberOfOccurrence(placeholder)
+    }
+}
+
+private fun String.numberOfOccurrence(substring: String): Int {
+    var count = 0
+    var index = this.indexOf(substring, startIndex = 0, ignoreCase = true)
+    while (index > -1) {
+        count += 1
+        index = this.indexOf(substring, startIndex = index + 1, ignoreCase = true)
+    }
+    return count
+}

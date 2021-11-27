@@ -79,6 +79,44 @@ class AnalyzerTest {
     }
 
     @Nested
+    inner class PlaceholderOccurrence {
+        @Test
+        fun `no placeholders`() {
+            val actual = "there are no placeholder values in this string".placeholderCount()
+
+            assertThat(actual).isEqualTo(0)
+        }
+
+        @Test
+        fun `empty string has no placeholders`() {
+            val actual = "".placeholderCount()
+
+            assertThat(actual).isEqualTo(0)
+        }
+
+        @Test
+        fun `one placeholder`() {
+            val actual = "there is one placeholder %@ within this string".placeholderCount()
+
+            assertThat(actual).isEqualTo(1)
+        }
+
+        @Test
+        fun `three placeholders`() {
+            val actual = "there is are %@%@ three placeholders %@ within this string".placeholderCount()
+
+            assertThat(actual).isEqualTo(3)
+        }
+
+        @Test
+        fun `different placeholder values are counted`() {
+            val actual = "there are %D%F %f %d %s %S 7 placeholders %@ within this string".placeholderCount()
+
+            assertThat(actual).isEqualTo(7)
+        }
+    }
+
+    @Nested
     inner class Analyze {
         val androidStrings = mapOf(
             "common_key_0" to "match exactly",

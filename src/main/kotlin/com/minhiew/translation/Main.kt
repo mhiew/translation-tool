@@ -15,6 +15,7 @@ private const val EXACT_MATCH_FILE = "exact-matches.csv"
 private const val DIFFERENCES_FILE = "differences.csv"
 
 lateinit var outputFolder: File
+private var blockPlaceholderMismatch: Boolean = true //TODO - set on configuration
 
 fun main(args: Array<String>) {
     outputFolder = File(args[2])
@@ -41,7 +42,7 @@ private fun compareStrings(androidFile: File, iosFile: File) {
     writeUniqueIOSStrings(report)
     writeExactMatches(report)
     writeDifferences(report)
-    writeFixedAndroidXmlFile(androidStringsFile = androidFile, report = report)
+    writeFixedAndroidXmlFile(androidStringsFile = androidFile, report = report, blockPlaceholderMismatch = blockPlaceholderMismatch)
 }
 
 private fun writeUniqueAndroidStrings(report: LocalizationReport) {
@@ -81,27 +82,42 @@ private fun writeExactMatches(report: LocalizationReport) {
 
 private fun writeDifferences(report: LocalizationReport) {
     val differences: List<StringComparison> = report.differences
-        .sortedWith(compareBy({ !it.isCaseInsensitiveMatch }, { it.key })) //case-insensitive matches first then keys alphabetical ascending
+        .sortedWith(compareBy({ !it.hasMismatchedPlaceholders }, { !it.isCaseInsensitiveMatch }, { it.key }))
 
     val caseInsensitiveMatches: List<StringComparison> = differences.filter { it.isCaseInsensitiveMatch }
     println("Total Differences: ${differences.size} Case Sensitive: ${caseInsensitiveMatches.size}, Other: ${differences.size - caseInsensitiveMatches.size}")
 
-    writeToCsv(fileName = DIFFERENCES_FILE) {
-        writeNext(arrayOf("Key", "Android Value", "iOS Value", "Is Case Insensitive Match"))
+    val numberOfWarnings = report.mismatchedPlaceholders.size
+    if (numberOfWarnings > 0) {
+        println("\n!! WARNING: Detected $numberOfWarnings strings with mismatched placeholder counts !!\n")
+    }
+
+    val outputFileName = if (numberOfWarnings > 0) "$numberOfWarnings WARNINGS - $DIFFERENCES_FILE" else DIFFERENCES_FILE
+    writeToCsv(fileName = outputFileName) {
+        writeNext(arrayOf("Key", "Android Value", "iOS Value", "Has Mismatched Placeholder", "Is Case Insensitive Match"))
         differences.forEach {
-            writeNext(arrayOf(it.key, it.androidValue, it.iosValue, it.isCaseInsensitiveMatch.toString()))
+            writeNext(arrayOf(it.key, it.androidValue, it.iosValue, it.hasMismatchedPlaceholders.toString(), it.isCaseInsensitiveMatch.toString()))
         }
     }
 }
 
-private fun writeFixedAndroidXmlFile(fileOutputFolder: File = outputFolder, androidStringsFile: File, report: LocalizationReport) {
+private fun writeFixedAndroidXmlFile(
+    fileOutputFolder: File = outputFolder,
+    androidStringsFile: File,
+    report: LocalizationReport,
+    blockPlaceholderMismatch: Boolean
+) {
     if (report.differences.isEmpty()) {
         println("Platform localizations match for shared keys!")
         return
     }
 
-    println("Generating corrected android strings file with mismatched text replaced with ios values.")
-    val correctedAndroidStrings = AndroidTranslationGenerator.generateFixedAndroidXML(androidStringsFile, report)
+    println("Generating corrected android strings file where text differences are replaced with ios values.")
+    val correctedAndroidStrings = AndroidTranslationGenerator.generateFixedAndroidXML(
+        originalStringsXmlFile = androidStringsFile,
+        report = report,
+        blockPlaceholderMismatch = blockPlaceholderMismatch
+    )
 
     val outputFile = File(fileOutputFolder, androidStringsFile.name)
     if (outputFile.exists()) outputFile.delete()

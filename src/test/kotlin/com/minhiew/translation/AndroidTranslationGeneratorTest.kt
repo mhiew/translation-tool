@@ -13,7 +13,7 @@ class AndroidTranslationGeneratorTest {
     |    <!-- Comments are not stripped -->
     |    <string name="shared_key_1">To Be Replaced 1</string>
     |    <string name="shared_key_2">To Be Replaced 2</string>
-    |    <string name="shared_key_3">To Be Replaced 2</string>
+    |    <string name="shared_key_3">To Be Replaced 3</string>
     |</resources>""".trimMargin()
 
     private val differences = listOf<StringComparison>(
@@ -35,7 +35,33 @@ class AndroidTranslationGeneratorTest {
         |    <string name="shared_key_3">ios values sanitized %@, %@ and %@</string>
         |</resources>""".trimMargin()
 
-        val actual = AndroidTranslationGenerator.generateFixedAndroidXML(StringReader(originalXML), differences)
+        val actual = AndroidTranslationGenerator.generateFixedAndroidXML(
+            reader = StringReader(originalXML),
+            differences = differences,
+            blockPlaceholderMismatch = false
+        )
+
+        assertThat(actual.asXML()).isEqualTo(expected)
+    }
+
+    @Test
+    fun `blocks updating android when placeholder counts mismatch`() {
+        val expected = """
+        |<?xml version="1.0" encoding="UTF-8"?>
+        |<resources>
+        |    <string name="android_only" translatable="false">wont be overriden</string>
+        |
+        |    <!-- Comments are not stripped -->
+        |    <string name="shared_key_1">ios replacement 1</string>
+        |    <string name="shared_key_2">ios replacement yay</string>
+        |    <string name="shared_key_3">To Be Replaced 3</string>
+        |</resources>""".trimMargin()
+
+        val actual = AndroidTranslationGenerator.generateFixedAndroidXML(
+            reader = StringReader(originalXML),
+            differences = differences,
+            blockPlaceholderMismatch = true
+        )
 
         assertThat(actual.asXML()).isEqualTo(expected)
     }
