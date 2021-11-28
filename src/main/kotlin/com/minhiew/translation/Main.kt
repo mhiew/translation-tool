@@ -26,6 +26,10 @@ fun main(args: Array<String>) {
     println("Parsed Config: $appConfig\n")
 
     val outputFolder = appConfig.outputDirectory.toFile()
+    if (appConfig.cleanOutputDirectory) {
+        println("Deleting output directory: ${appConfig.outputDirectory}")
+        outputFolder.deleteDirectory()
+    }
     outputFolder.createDirectory()
 
     syncMain(
@@ -223,6 +227,12 @@ private fun getCsvWriter(writer: Writer): CSVWriter {
 private fun File.createDirectory() {
     if (!this.exists()) {
         this.mkdir()
+    }
+}
+
+private fun File.deleteDirectory() {
+    if (this.exists()) {
+        this.deleteRecursively()
     }
 }
 

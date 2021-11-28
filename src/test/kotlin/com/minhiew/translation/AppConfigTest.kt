@@ -14,6 +14,7 @@ class AppConfigTest {
 
         val expected = AppConfig(
             outputDirectory = Path.of("./output"),
+            cleanOutputDirectory = true,
             blockReplacementOnPlaceholderCountMismatch = false,
             useMainAsBaseAndroidTemplate = false,
             main = LocalizationBundle(language = "en", androidFile = Path.of("values/strings.xml"), iosFile = Path.of("Base.lproj/Localizable.strings")),
@@ -51,5 +52,6 @@ class AppConfigTest {
         assertThat(actual.localizations).isEqualTo(emptyList<LocalizationBundle>())
         assertThat(actual.blockReplacementOnPlaceholderCountMismatch).isTrue
         assertThat(actual.useMainAsBaseAndroidTemplate).isTrue
+        assertThat(actual.cleanOutputDirectory).isFalse
     }
 }

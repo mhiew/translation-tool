@@ -4,6 +4,7 @@ import java.nio.file.Path
 
 data class AppConfig(
     val outputDirectory: Path,
+    val cleanOutputDirectory: Boolean = false,
     val blockReplacementOnPlaceholderCountMismatch: Boolean = true,
     val useMainAsBaseAndroidTemplate: Boolean = true,
     val main: LocalizationBundle,
