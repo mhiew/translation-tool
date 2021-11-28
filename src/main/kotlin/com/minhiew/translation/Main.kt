@@ -17,7 +17,6 @@ private const val UNIQUE_IOS_STRINGS_FILE = "unique-ios-strings.csv"
 private const val EXACT_MATCH_FILE = "exact-matches.csv"
 private const val DIFFERENCES_FILE = "differences.csv"
 
-private lateinit var outputFolder: File
 private var blockPlaceholderMismatch: Boolean = true
 
 fun main(args: Array<String>) {
@@ -27,21 +26,26 @@ fun main(args: Array<String>) {
     val appConfig = config.extract<AppConfig>()
     println("Parsed Config: $appConfig\n")
 
-    outputFolder = appConfig.outputDirectory.toFile()
-    if (!outputFolder.exists()) {
-        outputFolder.mkdir()
-    }
+    val outputFolder = appConfig.outputDirectory.toFile()
+    outputFolder.createDirectory()
 
     blockPlaceholderMismatch = appConfig.blockPlaceholderMismatch
 
-    syncLanguage(appConfig.main)
+    syncLanguage(outputFolder = outputFolder, bundle = appConfig.main)
+
+    appConfig.localizations.forEach {
+        syncLanguage(outputFolder = outputFolder, bundle = it)
+    }
 }
 
-private fun syncLanguage(bundle: LocalizationBundle) {
-    syncStrings(language = bundle.language, androidFile = bundle.androidFile.toFile(), iosFile = bundle.iosFile.toFile())
+private fun syncLanguage(outputFolder: File, bundle: LocalizationBundle) {
+    syncStrings(outputFolder = outputFolder, language = bundle.language, androidFile = bundle.androidFile.toFile(), iosFile = bundle.iosFile.toFile())
 }
 
-private fun syncStrings(language: String, androidFile: File, iosFile: File) {
+private fun syncStrings(outputFolder: File, language: String, androidFile: File, iosFile: File) {
+    val subDirectory = File(outputFolder, language)
+    subDirectory.createDirectory()
+
     println("Synchronizing language: $language for Android: $androidFile from iOS: $iosFile")
 
     val androidStrings: Map<String, String> = AndroidFileParser.parse(androidFile)
@@ -52,18 +56,24 @@ private fun syncStrings(language: String, androidFile: File, iosFile: File) {
 
     val report: LocalizationReport = Analyzer.compare(androidStrings = androidStrings, iosStrings = iosStrings)
 
-    writeUniqueAndroidStrings(report)
-    writeUniqueIOSStrings(report)
-    writeExactMatches(report)
-    writeDifferences(report)
-    writeFixedAndroidXmlFile(androidStringsFile = androidFile, report = report, blockPlaceholderMismatch = blockPlaceholderMismatch)
+    writeUniqueAndroidStrings(outputFolder = subDirectory, report = report)
+    writeUniqueIOSStrings(outputFolder = subDirectory, report = report)
+    writeExactMatches(outputFolder = subDirectory, report = report)
+    writeDifferences(outputFolder = subDirectory, report = report)
+
+    writeFixedAndroidXmlFile(
+        outputFolder = subDirectory,
+        androidStringsFile = androidFile,
+        report = report,
+        blockPlaceholderMismatch = blockPlaceholderMismatch
+    )
 }
 
-private fun writeUniqueAndroidStrings(report: LocalizationReport) {
+private fun writeUniqueAndroidStrings(outputFolder: File, report: LocalizationReport) {
     val uniqueStrings = report.uniqueAndroidStrings
     println("Unique Android Strings: ${uniqueStrings.size}")
 
-    writeToCsv(fileName = UNIQUE_ANDROID_STRINGS_FILE) {
+    writeToCsv(outputFolder = outputFolder, fileName = UNIQUE_ANDROID_STRINGS_FILE) {
         writeNext(arrayOf("Android Key", "Android Value"))
         uniqueStrings.forEach { (key, value) ->
             writeNext(arrayOf(key, value))
@@ -71,10 +81,10 @@ private fun writeUniqueAndroidStrings(report: LocalizationReport) {
     }
 }
 
-private fun writeUniqueIOSStrings(report: LocalizationReport) {
+private fun writeUniqueIOSStrings(outputFolder: File, report: LocalizationReport) {
     val uniqueStrings = report.uniqueIosStrings
     println("Unique iOS Strings: ${uniqueStrings.size}")
-    writeToCsv(fileName = UNIQUE_IOS_STRINGS_FILE) {
+    writeToCsv(outputFolder = outputFolder, fileName = UNIQUE_IOS_STRINGS_FILE) {
         writeNext(arrayOf("iOS Key", "iOS Value"))
         uniqueStrings.forEach { (key, value) ->
             writeNext(arrayOf(key, value))
@@ -82,11 +92,11 @@ private fun writeUniqueIOSStrings(report: LocalizationReport) {
     }
 }
 
-private fun writeExactMatches(report: LocalizationReport) {
+private fun writeExactMatches(outputFolder: File, report: LocalizationReport) {
     val exactMatches: List<StringComparison> = report.exactMatches.sortedBy { it.key }
 
     println("Exact matches: ${exactMatches.size}")
-    writeToCsv(fileName = EXACT_MATCH_FILE) {
+    writeToCsv(outputFolder = outputFolder, fileName = EXACT_MATCH_FILE) {
         writeNext(arrayOf("Key", "Android Value", "iOS Value"))
         exactMatches.forEach {
             writeNext(arrayOf(it.key, it.androidValue, it.iosValue))
@@ -94,7 +104,7 @@ private fun writeExactMatches(report: LocalizationReport) {
     }
 }
 
-private fun writeDifferences(report: LocalizationReport) {
+private fun writeDifferences(outputFolder: File, report: LocalizationReport) {
     val differences: List<StringComparison> = report.differences
         .sortedWith(compareBy({ !it.hasMismatchedPlaceholders }, { !it.isCaseInsensitiveMatch }, { it.key }))
 
@@ -106,7 +116,7 @@ private fun writeDifferences(report: LocalizationReport) {
     }
 
     val outputFileName = if (numberOfWarnings > 0) "$numberOfWarnings WARNINGS - $DIFFERENCES_FILE" else DIFFERENCES_FILE
-    writeToCsv(fileName = outputFileName) {
+    writeToCsv(outputFolder = outputFolder, fileName = outputFileName) {
         writeNext(arrayOf("Key", "Android Value", "iOS Value", "Has Mismatched Placeholder", "Is Case Insensitive Match"))
         differences.forEach {
             writeNext(arrayOf(it.key, it.androidValue, it.iosValue, it.hasMismatchedPlaceholders.toString(), it.isCaseInsensitiveMatch.toString()))
@@ -115,7 +125,7 @@ private fun writeDifferences(report: LocalizationReport) {
 }
 
 private fun writeFixedAndroidXmlFile(
-    fileOutputFolder: File = outputFolder,
+    outputFolder: File,
     androidStringsFile: File,
     report: LocalizationReport,
     blockPlaceholderMismatch: Boolean
@@ -132,8 +142,8 @@ private fun writeFixedAndroidXmlFile(
         blockPlaceholderMismatch = blockPlaceholderMismatch
     )
 
-    val outputFile = File(fileOutputFolder, androidStringsFile.name)
-    if (outputFile.exists()) outputFile.delete()
+    val outputFile = File(outputFolder, androidStringsFile.name)
+    outputFile.recreate()
     val fileWriter = Files.newBufferedWriter(outputFile.toPath(), Charset.forName("UTF-8"), StandardOpenOption.CREATE)
     fileWriter.use {
         val outputFormat = OutputFormat().apply {
@@ -146,9 +156,9 @@ private fun writeFixedAndroidXmlFile(
 }
 
 //helper function to write to csv
-private fun writeToCsv(fileOutputFolder: File = outputFolder, fileName: String, lambda: CSVWriter.() -> Unit) {
-    val file = File(fileOutputFolder, fileName)
-    if (file.exists()) file.delete()
+private fun writeToCsv(outputFolder: File, fileName: String, lambda: CSVWriter.() -> Unit) {
+    val file = File(outputFolder, fileName)
+    file.recreate()
     val fileWriter = Files.newBufferedWriter(file.toPath(), Charset.forName("UTF-8"), StandardOpenOption.CREATE)
     getCsvWriter(fileWriter).use(lambda)
 }
@@ -161,4 +171,16 @@ private fun getCsvWriter(writer: Writer): CSVWriter {
         CSVWriter.DEFAULT_ESCAPE_CHARACTER,
         CSVWriter.DEFAULT_LINE_END
     )
+}
+
+private fun File.createDirectory() {
+    if (!this.exists()) {
+        this.mkdir()
+    }
+}
+
+private fun File.recreate() {
+    if (this.exists() && !this.isDirectory) {
+        this.delete()
+    }
 }
