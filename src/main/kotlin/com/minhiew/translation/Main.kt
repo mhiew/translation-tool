@@ -9,6 +9,7 @@ import java.io.File
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteIfExists
@@ -43,7 +44,8 @@ fun main(args: Array<String>) {
         mainBundle = appConfig.main,
         localeBundle = appConfig.main,
         blockReplacementOnPlaceholderCountMismatch = appConfig.blockReplacementOnPlaceholderCountMismatch,
-        useMainAndroidFileAsBaseTemplate = false
+        useMainAndroidFileAsBaseTemplate = false,
+        replaceAndroidSourceFile = appConfig.replaceAndroidSourceFile
     )
 
     //synchronize other locales
@@ -53,7 +55,8 @@ fun main(args: Array<String>) {
             mainBundle = appConfig.main,
             localeBundle = it,
             blockReplacementOnPlaceholderCountMismatch = appConfig.blockReplacementOnPlaceholderCountMismatch,
-            useMainAndroidFileAsBaseTemplate = appConfig.useMainAndroidFileAsBaseTemplate
+            useMainAndroidFileAsBaseTemplate = appConfig.useMainAndroidFileAsBaseTemplate,
+            replaceAndroidSourceFile = appConfig.replaceAndroidSourceFile
         )
     }
 }
@@ -63,7 +66,8 @@ private fun synchronizeLocales(
     mainBundle: LocalizationBundle,
     localeBundle: LocalizationBundle,
     blockReplacementOnPlaceholderCountMismatch: Boolean,
-    useMainAndroidFileAsBaseTemplate: Boolean
+    useMainAndroidFileAsBaseTemplate: Boolean,
+    replaceAndroidSourceFile: Boolean,
 ) {
     val localeLanguage = localeBundle.language
     println("Synchronizing localization language: $localeLanguage for Android: ${localeBundle.androidFile} from iOS: ${localeBundle.iosFile}")
@@ -86,7 +90,7 @@ private fun synchronizeLocales(
     writeDifferences(outputFolder = outputFolder, report = report)
 
     //create synchronized android file with shared text copied from iOS
-    writeSynchronizedAndroidFile(
+    val synchronizedFile = writeSynchronizedAndroidFile(
         outputFolder = outputFolder,
         mainAndroidFile = mainBundle.androidFile,
         localeAndroidFile = localeBundle.androidFile,
@@ -94,6 +98,13 @@ private fun synchronizeLocales(
         blockReplacementOnPlaceholderCountMismatch = blockReplacementOnPlaceholderCountMismatch,
         useMainAndroidFileAsBaseTemplate = useMainAndroidFileAsBaseTemplate
     )
+
+    if (replaceAndroidSourceFile && synchronizedFile?.exists() == true) {
+        val from = synchronizedFile
+        val to = localeBundle.androidFile
+        println("Copying synchronized file from: $from to source: $to")
+        Files.copy(from, to, StandardCopyOption.REPLACE_EXISTING)
+    }
 }
 
 private fun writeUniqueAndroidStrings(outputFolder: Path, report: LocalizationReport) {
@@ -162,10 +173,10 @@ private fun writeSynchronizedAndroidFile(
     report: LocalizationReport,
     blockReplacementOnPlaceholderCountMismatch: Boolean,
     useMainAndroidFileAsBaseTemplate: Boolean
-) {
+): Path? {
     if (report.differences.isEmpty()) {
         println("All shared text copy match between platforms. No synchronized android file is required.")
-        return
+        return null
     }
 
     //decide which base android file to use. either merging the other locale into the main android xml file or using the locale directly
@@ -198,6 +209,8 @@ private fun writeSynchronizedAndroidFile(
         xmlWriter.write(correctedAndroidStrings)
         xmlWriter.close()
     }
+
+    return outputFile
 }
 
 //helper function to write to csv

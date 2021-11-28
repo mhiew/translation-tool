@@ -7,6 +7,7 @@ data class AppConfig(
     val cleanOutputDirectory: Boolean = false,
     val blockReplacementOnPlaceholderCountMismatch: Boolean = true,
     val useMainAndroidFileAsBaseTemplate: Boolean = true,
+    val replaceAndroidSourceFile: Boolean = false,
     val main: LocalizationBundle,
     val localizations: List<LocalizationBundle> = emptyList()
 )

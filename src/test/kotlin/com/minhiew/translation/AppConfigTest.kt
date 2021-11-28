@@ -17,6 +17,7 @@ class AppConfigTest {
             cleanOutputDirectory = true,
             blockReplacementOnPlaceholderCountMismatch = false,
             useMainAndroidFileAsBaseTemplate = false,
+            replaceAndroidSourceFile = true,
             main = LocalizationBundle(language = "en", androidFile = Path.of("values/strings.xml"), iosFile = Path.of("Base.lproj/Localizable.strings")),
             localizations = listOf(
                 LocalizationBundle(language = "fr", androidFile = Path.of("values-fr/strings.xml"), iosFile = Path.of("fr.lproj/Localizable.strings")),
@@ -53,5 +54,6 @@ class AppConfigTest {
         assertThat(actual.blockReplacementOnPlaceholderCountMismatch).isTrue
         assertThat(actual.useMainAndroidFileAsBaseTemplate).isTrue
         assertThat(actual.cleanOutputDirectory).isFalse
+        assertThat(actual.replaceAndroidSourceFile).isFalse
     }
 }
