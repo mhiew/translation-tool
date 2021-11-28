@@ -28,12 +28,10 @@ fun main(args: Array<String>) {
     val outputFolder = appConfig.outputDirectory.toFile()
     outputFolder.createDirectory()
 
-    val blockPlaceholderMismatch = appConfig.blockPlaceholderMismatch
-
     syncMain(
         rootOutputFolder = outputFolder,
         bundle = appConfig.main,
-        blockPlaceholderMismatch = blockPlaceholderMismatch
+        blockPlaceholderMismatch = appConfig.blockReplacementOnPlaceholderCountMismatch
     )
 
     appConfig.localizations.forEach {
@@ -41,7 +39,7 @@ fun main(args: Array<String>) {
             rootOutputFolder = outputFolder,
             mainBundle = appConfig.main,
             localeBundle = it,
-            blockPlaceholderMismatch = blockPlaceholderMismatch,
+            blockReplacementOnPlaceholderCountMismatch = appConfig.blockReplacementOnPlaceholderCountMismatch,
             useMainAsBaseAndroidTemplate = appConfig.useMainAsBaseAndroidTemplate
         )
     }
@@ -66,7 +64,7 @@ private fun syncOtherLocales(
     rootOutputFolder: File,
     mainBundle: LocalizationBundle,
     localeBundle: LocalizationBundle,
-    blockPlaceholderMismatch: Boolean,
+    blockReplacementOnPlaceholderCountMismatch: Boolean,
     useMainAsBaseAndroidTemplate: Boolean
 ) {
     val localeLanguage = localeBundle.language
@@ -90,7 +88,7 @@ private fun syncOtherLocales(
     val subDirectory = File(rootOutputFolder, localeBundle.language)
     subDirectory.createDirectory()
 
-    syncStrings(outputFolder = subDirectory, androidStrings = androidLocaleStrings, iosStrings = iosStrings, androidXMLDocument = androidLocaleXML, blockPlaceholderMismatch = blockPlaceholderMismatch)
+    syncStrings(outputFolder = subDirectory, androidStrings = androidLocaleStrings, iosStrings = iosStrings, androidXMLDocument = androidLocaleXML, blockPlaceholderMismatch = blockReplacementOnPlaceholderCountMismatch)
 }
 
 private fun syncStrings(
@@ -114,7 +112,7 @@ private fun syncStrings(
         outputFolder = outputFolder,
         androidXMLDocument = androidXMLDocument,
         report = report,
-        blockPlaceholderMismatch = blockPlaceholderMismatch
+        blockReplacementOnPlaceholderCountMismatch = blockPlaceholderMismatch
     )
 }
 
@@ -177,7 +175,7 @@ private fun writeFixedAndroidXmlFile(
     outputFolder: File,
     androidXMLDocument: Document,
     report: LocalizationReport,
-    blockPlaceholderMismatch: Boolean
+    blockReplacementOnPlaceholderCountMismatch: Boolean
 ) {
     if (report.differences.isEmpty()) {
         println("Platform localizations match for shared keys!")
@@ -188,7 +186,7 @@ private fun writeFixedAndroidXmlFile(
     val correctedAndroidStrings = AndroidTranslationGenerator.generateFixedAndroidXML(
         document = androidXMLDocument,
         report = report,
-        blockPlaceholderMismatch = blockPlaceholderMismatch
+        blockReplacementOnPlaceholderCountMismatch = blockReplacementOnPlaceholderCountMismatch
     )
 
     val outputFile = File(outputFolder, "strings.xml")

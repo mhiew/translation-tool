@@ -14,7 +14,7 @@ class AppConfigTest {
 
         val expected = AppConfig(
             outputDirectory = Path.of("./output"),
-            blockPlaceholderMismatch = false,
+            blockReplacementOnPlaceholderCountMismatch = false,
             useMainAsBaseAndroidTemplate = false,
             main = LocalizationBundle(language = "en", androidFile = Path.of("values/strings.xml"), iosFile = Path.of("Base.lproj/Localizable.strings")),
             localizations = listOf(
@@ -49,7 +49,7 @@ class AppConfigTest {
 
         assertThat(actual).isEqualTo(expected)
         assertThat(actual.localizations).isEqualTo(emptyList<LocalizationBundle>())
-        assertThat(actual.blockPlaceholderMismatch).isTrue
+        assertThat(actual.blockReplacementOnPlaceholderCountMismatch).isTrue
         assertThat(actual.useMainAsBaseAndroidTemplate).isTrue
     }
 }

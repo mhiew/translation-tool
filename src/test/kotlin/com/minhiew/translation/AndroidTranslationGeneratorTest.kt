@@ -38,7 +38,7 @@ class AndroidTranslationGeneratorTest {
         val actual = AndroidTranslationGenerator.generateFixedAndroidXML(
             xmlString = originalXML,
             differences = differences,
-            blockPlaceholderMismatch = false
+            blockReplacementOnPlaceholderCountMismatch = false
         )
 
         assertThat(actual.asXML()).isEqualTo(expected)
@@ -60,7 +60,7 @@ class AndroidTranslationGeneratorTest {
         val actual = AndroidTranslationGenerator.generateFixedAndroidXML(
             xmlString = originalXML,
             differences = differences,
-            blockPlaceholderMismatch = true
+            blockReplacementOnPlaceholderCountMismatch = true
         )
 
         assertThat(actual.asXML()).isEqualTo(expected)

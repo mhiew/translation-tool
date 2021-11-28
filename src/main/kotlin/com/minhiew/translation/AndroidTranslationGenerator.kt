@@ -7,30 +7,30 @@ import java.io.StringReader
 
 object AndroidTranslationGenerator {
     //region generating an android file with synchronized translations from ios
-    fun generateFixedAndroidXML(originalStringsXmlFile: File, report: LocalizationReport, blockPlaceholderMismatch: Boolean): Document {
+    fun generateFixedAndroidXML(originalStringsXmlFile: File, report: LocalizationReport, blockReplacementOnPlaceholderCountMismatch: Boolean): Document {
         val reader = originalStringsXmlFile.bufferedReader()
         val document = SAXReader().read(reader)
-        return generateFixedAndroidXML(document = document, differences = report.differences, blockPlaceholderMismatch = blockPlaceholderMismatch)
+        return generateFixedAndroidXML(document = document, differences = report.differences, blockReplacementOnPlaceholderCountMismatch = blockReplacementOnPlaceholderCountMismatch)
     }
 
-    fun generateFixedAndroidXML(document: Document, report: LocalizationReport, blockPlaceholderMismatch: Boolean): Document {
-        return generateFixedAndroidXML(document = document, differences = report.differences, blockPlaceholderMismatch = blockPlaceholderMismatch)
+    fun generateFixedAndroidXML(document: Document, report: LocalizationReport, blockReplacementOnPlaceholderCountMismatch: Boolean): Document {
+        return generateFixedAndroidXML(document = document, differences = report.differences, blockReplacementOnPlaceholderCountMismatch = blockReplacementOnPlaceholderCountMismatch)
     }
 
-    fun generateFixedAndroidXML(xmlString: String, differences: List<StringComparison>, blockPlaceholderMismatch: Boolean): Document {
+    fun generateFixedAndroidXML(xmlString: String, differences: List<StringComparison>, blockReplacementOnPlaceholderCountMismatch: Boolean): Document {
         val document = SAXReader().read(StringReader(xmlString))
-        return generateFixedAndroidXML(document = document, differences = differences, blockPlaceholderMismatch = blockPlaceholderMismatch)
+        return generateFixedAndroidXML(document = document, differences = differences, blockReplacementOnPlaceholderCountMismatch = blockReplacementOnPlaceholderCountMismatch)
     }
 
     // Standardizes the input android xml file with the ios localizations
     // This creates an in memory copy of the original android strings.xml document
     // It will then find any keys that have mismatched text copy and replace it with the ios version
-    fun generateFixedAndroidXML(document: Document, differences: List<StringComparison>, blockPlaceholderMismatch: Boolean): Document {
+    fun generateFixedAndroidXML(document: Document, differences: List<StringComparison>, blockReplacementOnPlaceholderCountMismatch: Boolean): Document {
         //modify the document replacing the text copy with the ios value for all differences
         val rootElement = document.rootElement
         differences.forEach { comparison: StringComparison ->
-            if (comparison.hasMismatchedPlaceholders && blockPlaceholderMismatch) {
-                println("Block replacing string due to placeholder mismatch:")
+            if (comparison.hasMismatchedPlaceholders && blockReplacementOnPlaceholderCountMismatch) {
+                println("Block replacing ${comparison.key} due to placeholder mismatch:")
                 println("${comparison.key} - placeholder count android ${comparison.androidPlaceholderCount} ios ${comparison.iosPlaceholderCount}\n")
                 return@forEach
             }
