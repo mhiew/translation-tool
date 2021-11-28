@@ -1,8 +1,8 @@
 package com.minhiew.translation
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.io.StringReader
 
 class AndroidTranslationGeneratorTest {
     private val originalXML = """
@@ -36,7 +36,7 @@ class AndroidTranslationGeneratorTest {
         |</resources>""".trimMargin()
 
         val actual = AndroidTranslationGenerator.generateFixedAndroidXML(
-            reader = StringReader(originalXML),
+            xmlString = originalXML,
             differences = differences,
             blockPlaceholderMismatch = false
         )
@@ -58,11 +58,95 @@ class AndroidTranslationGeneratorTest {
         |</resources>""".trimMargin()
 
         val actual = AndroidTranslationGenerator.generateFixedAndroidXML(
-            reader = StringReader(originalXML),
+            xmlString = originalXML,
             differences = differences,
             blockPlaceholderMismatch = true
         )
 
         assertThat(actual.asXML()).isEqualTo(expected)
+    }
+
+    @Nested
+    inner class MergeAndroidTranslations {
+        @Test
+        fun `removes untranslatable text and replaces string values for common keys`() {
+            val expected = """
+        |<?xml version="1.0" encoding="UTF-8"?>
+        |<resources>
+        |    
+        |
+        |    <!-- Comments are not stripped -->
+        |    <string name="shared_key_1">French Value 1</string>
+        |    <string name="shared_key_2">French Value 2</string>
+        |    <string name="shared_key_3">French Value 3</string>
+        |</resources>""".trimMargin()
+
+            val otherAndroidStrings = mapOf(
+                "shared_key_1" to "French Value 1",
+                "shared_key_2" to "French Value 2",
+                "shared_key_3" to "French Value 3",
+            )
+
+            val actual = AndroidTranslationGenerator.mergeAndroidTranslation(
+                mainTemplateXML = originalXML,
+                otherAndroidStrings = otherAndroidStrings
+            )
+
+            assertThat(actual.asXML()).isEqualTo(expected)
+        }
+
+        @Test
+        fun `keys not found in the other locale are set to empty within the main template`() {
+            val expected = """
+        |<?xml version="1.0" encoding="UTF-8"?>
+        |<resources>
+        |    
+        |
+        |    <!-- Comments are not stripped -->
+        |    <string name="shared_key_1">French Value 1</string>
+        |    <string name="shared_key_2">French Value 2</string>
+        |    <string name="shared_key_3"></string>
+        |</resources>""".trimMargin()
+
+            val otherAndroidStrings = mapOf(
+                "shared_key_1" to "French Value 1",
+                "shared_key_2" to "French Value 2",
+            )
+
+            val actual = AndroidTranslationGenerator.mergeAndroidTranslation(
+                mainTemplateXML = originalXML,
+                otherAndroidStrings = otherAndroidStrings
+            )
+
+            assertThat(actual.asXML()).isEqualTo(expected)
+        }
+
+        @Test
+        fun `extra keys within the other android strings are ignored`() {
+            val expected = """
+        |<?xml version="1.0" encoding="UTF-8"?>
+        |<resources>
+        |    
+        |
+        |    <!-- Comments are not stripped -->
+        |    <string name="shared_key_1">French Value 1</string>
+        |    <string name="shared_key_2">French Value 2</string>
+        |    <string name="shared_key_3">French Value 3</string>
+        |</resources>""".trimMargin()
+
+            val otherAndroidStrings = mapOf(
+                "shared_key_1" to "French Value 1",
+                "shared_key_2" to "French Value 2",
+                "shared_key_3" to "French Value 3",
+                "key_not_in_main" to "wont be used since it's not within the main template"
+            )
+
+            val actual = AndroidTranslationGenerator.mergeAndroidTranslation(
+                mainTemplateXML = originalXML,
+                otherAndroidStrings = otherAndroidStrings
+            )
+
+            assertThat(actual.asXML()).isEqualTo(expected)
+        }
     }
 }
