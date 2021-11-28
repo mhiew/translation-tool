@@ -4,21 +4,21 @@ import com.typesafe.config.ConfigFactory
 import io.github.config4k.extract
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import java.io.File
+import java.nio.file.Path
 
 class AppConfigTest {
     @Test
     fun `parses sample config file`() {
-        val fixture = File("src/test/resources/sample.config".sanitizeFilePath())
+        val fixture = Path.of("src/test/resources/sample.config").toFile()
         val config = ConfigFactory.parseFile(fixture)
 
         val expected = AppConfig(
-            outputDirectory = File("./output"),
+            outputDirectory = Path.of("./output"),
             blockPlaceholderMismatch = false,
-            main = LocalizationBundle(language = "en", androidFile = File("values/strings.xml"), iosFile = File("Base.lproj/Localizable.strings")),
+            main = LocalizationBundle(language = "en", androidFile = Path.of("values/strings.xml"), iosFile = Path.of("Base.lproj/Localizable.strings")),
             localizations = listOf(
-                LocalizationBundle(language = "fr", androidFile = File("values-fr/strings.xml"), iosFile = File("fr.lproj/Localizable.strings")),
-                LocalizationBundle(language = "fr-CA", androidFile = File("values-fr-rCA/strings.xml"), iosFile = File("fr-CA.lproj/Localizable.strings")),
+                LocalizationBundle(language = "fr", androidFile = Path.of("values-fr/strings.xml"), iosFile = Path.of("fr.lproj/Localizable.strings")),
+                LocalizationBundle(language = "fr-CA", androidFile = Path.of("values-fr-rCA/strings.xml"), iosFile = Path.of("fr-CA.lproj/Localizable.strings")),
             )
         )
 
@@ -40,8 +40,8 @@ class AppConfigTest {
         )
 
         val expected = AppConfig(
-            outputDirectory = File("./output"),
-            main = LocalizationBundle(language = "en", androidFile = File("strings.xml"), iosFile = File("Localizable.strings"))
+            outputDirectory = Path.of("./output"),
+            main = LocalizationBundle(language = "en", androidFile = Path.of("strings.xml"), iosFile = Path.of("Localizable.strings"))
         )
 
         val actual = config.extract<AppConfig>()

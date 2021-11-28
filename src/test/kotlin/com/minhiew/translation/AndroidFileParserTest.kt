@@ -2,12 +2,12 @@ package com.minhiew.translation
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import java.io.File
+import java.nio.file.Path
 
 class AndroidFileParserTest {
     @Test
     fun `parses android strings xml file`() {
-        val fixture = File("src/test/resources/android-strings.xml".sanitizeFilePath())
+        val fixture = Path.of("src/test/resources/android-strings.xml").toFile()
         val expected = mapOf(
             "web_link" to "https://www.test.com",
             "app_name" to "My App",
@@ -24,7 +24,7 @@ class AndroidFileParserTest {
 
     @Test
     fun `parses xml where tags span multiple lines`() {
-        val fixture = File("src/test/resources/tags-spanning-multiple-lines.xml".sanitizeFilePath())
+        val fixture = Path.of("src/test/resources/tags-spanning-multiple-lines.xml").toFile()
         val expected = mapOf(
             "singleline" to "Tag on a single line",
             "multiline" to "End tag is on a new line",
@@ -36,7 +36,7 @@ class AndroidFileParserTest {
 
     @Test
     fun `xml comments are not stripped during parsing`() {
-        val fixture = File("src/test/resources/android-strings.xml".sanitizeFilePath())
+        val fixture = Path.of("src/test/resources/android-strings.xml").toFile()
         val document = AndroidFileParser.getDocument(fixture)
 
         val comments = document.selectNodes("//comment()")

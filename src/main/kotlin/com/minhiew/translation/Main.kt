@@ -27,7 +27,7 @@ fun main(args: Array<String>) {
     val appConfig = config.extract<AppConfig>()
     println("Parsed Config: $appConfig\n")
 
-    outputFolder = appConfig.outputDirectory
+    outputFolder = appConfig.outputDirectory.toFile()
     if (!outputFolder.exists()) {
         outputFolder.mkdir()
     }
@@ -38,7 +38,7 @@ fun main(args: Array<String>) {
 }
 
 private fun syncLanguage(bundle: LocalizationBundle) {
-    syncStrings(language = bundle.language, androidFile = bundle.androidFile, iosFile = bundle.iosFile)
+    syncStrings(language = bundle.language, androidFile = bundle.androidFile.toFile(), iosFile = bundle.iosFile.toFile())
 }
 
 private fun syncStrings(language: String, androidFile: File, iosFile: File) {

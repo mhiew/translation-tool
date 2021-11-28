@@ -1,9 +1,9 @@
 package com.minhiew.translation
 
-import java.io.File
+import java.nio.file.Path
 
 data class AppConfig(
-    val outputDirectory: File,
+    val outputDirectory: Path,
     val blockPlaceholderMismatch: Boolean = true,
     val main: LocalizationBundle,
     val localizations: List<LocalizationBundle> = emptyList()
@@ -11,6 +11,6 @@ data class AppConfig(
 
 data class LocalizationBundle(
     val language: String,
-    val androidFile: File,
-    val iosFile: File,
+    val androidFile: Path,
+    val iosFile: Path,
 )
