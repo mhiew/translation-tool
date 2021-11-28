@@ -3,128 +3,105 @@ package com.minhiew.translation
 import com.opencsv.CSVWriter
 import com.typesafe.config.ConfigFactory
 import io.github.config4k.extract
-import org.dom4j.Document
 import org.dom4j.io.OutputFormat
 import org.dom4j.io.XMLWriter
 import java.io.File
-import java.io.Writer
 import java.nio.charset.Charset
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.StandardOpenOption
+import kotlin.io.path.createDirectories
+import kotlin.io.path.deleteIfExists
+import kotlin.io.path.exists
 
 private const val DEFAULT_CONFIG_FILE = "translation-tool.conf"
+
 private const val UNIQUE_ANDROID_STRINGS_FILE = "unique-android-strings.csv"
 private const val UNIQUE_IOS_STRINGS_FILE = "unique-ios-strings.csv"
 private const val EXACT_MATCH_FILE = "exact-matches.csv"
 private const val DIFFERENCES_FILE = "differences.csv"
 
 fun main(args: Array<String>) {
-    val configFile = DEFAULT_CONFIG_FILE
     val config = ConfigFactory.parseFile(File(DEFAULT_CONFIG_FILE))
-    println("Loading $configFile contents: $config\n")
+    println("Loading $DEFAULT_CONFIG_FILE contents: $config\n")
     val appConfig = config.extract<AppConfig>()
     println("Parsed Config: $appConfig\n")
 
-    val outputFolder = appConfig.outputDirectory.toFile()
+    //create the root output directory
+    val rootOutputDirectory = appConfig.outputDirectory
     if (appConfig.cleanOutputDirectory) {
         println("Deleting output directory: ${appConfig.outputDirectory}")
-        outputFolder.deleteDirectory()
+        rootOutputDirectory.toFile().deleteRecursively()
     }
-    outputFolder.createDirectory()
+    if (!rootOutputDirectory.exists()) {
+        rootOutputDirectory.createDirectories()
+    }
 
-    syncMain(
-        rootOutputFolder = outputFolder,
-        bundle = appConfig.main,
-        blockPlaceholderMismatch = appConfig.blockReplacementOnPlaceholderCountMismatch
+    //synchronize main locale
+    synchronizeLocales(
+        rootOutputFolder = rootOutputDirectory,
+        mainBundle = appConfig.main,
+        localeBundle = appConfig.main,
+        blockReplacementOnPlaceholderCountMismatch = appConfig.blockReplacementOnPlaceholderCountMismatch,
+        useMainAndroidFileAsBaseTemplate = false
     )
 
+    //synchronize other locales
     appConfig.localizations.forEach {
-        syncOtherLocales(
-            rootOutputFolder = outputFolder,
+        synchronizeLocales(
+            rootOutputFolder = rootOutputDirectory,
             mainBundle = appConfig.main,
             localeBundle = it,
             blockReplacementOnPlaceholderCountMismatch = appConfig.blockReplacementOnPlaceholderCountMismatch,
-            useMainAsBaseAndroidTemplate = appConfig.useMainAsBaseAndroidTemplate
+            useMainAndroidFileAsBaseTemplate = appConfig.useMainAndroidFileAsBaseTemplate
         )
     }
 }
 
-private fun syncMain(rootOutputFolder: File, bundle: LocalizationBundle, blockPlaceholderMismatch: Boolean) {
-    println("Synchronizing main language: ${bundle.language} for Android: ${bundle.androidFile} from iOS: ${bundle.iosFile}")
-
-    val androidFile = bundle.androidFile.toFile()
-    val androidStrings: Map<String, String> = AndroidFileParser.parse(androidFile)
-    val androidXML = AndroidFileParser.getDocument(androidFile)
-
-    val iosStrings: Map<String, String> = IOSFileParser.parse(bundle.iosFile.toFile())
-
-    val subDirectory = File(rootOutputFolder, bundle.language)
-    subDirectory.createDirectory()
-
-    syncStrings(outputFolder = subDirectory, androidStrings = androidStrings, iosStrings = iosStrings, androidXMLDocument = androidXML, blockPlaceholderMismatch = blockPlaceholderMismatch)
-}
-
-private fun syncOtherLocales(
-    rootOutputFolder: File,
+private fun synchronizeLocales(
+    rootOutputFolder: Path,
     mainBundle: LocalizationBundle,
     localeBundle: LocalizationBundle,
     blockReplacementOnPlaceholderCountMismatch: Boolean,
-    useMainAsBaseAndroidTemplate: Boolean
+    useMainAndroidFileAsBaseTemplate: Boolean
 ) {
     val localeLanguage = localeBundle.language
     println("Synchronizing localization language: $localeLanguage for Android: ${localeBundle.androidFile} from iOS: ${localeBundle.iosFile}")
 
-    val androidLocaleFile = localeBundle.androidFile.toFile()
-    val androidLocaleStrings: Map<String, String> = AndroidFileParser.parse(androidLocaleFile)
-    val androidLocaleXML = if (useMainAsBaseAndroidTemplate) {
-        println("Using main android strings as base template. Merging $localeLanguage ${localeBundle.androidFile.fileName} into main ${mainBundle.androidFile.fileName}")
-        //merge this locale into the main android xml document.
-        val mainAndroidXML = AndroidFileParser.getDocument(mainBundle.androidFile.toFile())
-        AndroidTranslationGenerator.mergeAndroidTranslation(mainTemplate = mainAndroidXML, otherLocale = androidLocaleStrings)
-    } else {
-        print("Using $localeLanguage ${localeBundle.androidFile.fileName} directly")
-        //use the locale xml document directly
-        AndroidFileParser.getDocument(androidLocaleFile)
-    }
+    val outputFolder = rootOutputFolder.resolve(localeLanguage)
+    outputFolder.createDirectories()
 
     val iosStrings: Map<String, String> = IOSFileParser.parse(localeBundle.iosFile.toFile())
-
-    val subDirectory = File(rootOutputFolder, localeBundle.language)
-    subDirectory.createDirectory()
-
-    syncStrings(outputFolder = subDirectory, androidStrings = androidLocaleStrings, iosStrings = iosStrings, androidXMLDocument = androidLocaleXML, blockPlaceholderMismatch = blockReplacementOnPlaceholderCountMismatch)
-}
-
-private fun syncStrings(
-    outputFolder: File,
-    androidStrings: Map<String, String>,
-    iosStrings: Map<String, String>,
-    androidXMLDocument: Document,
-    blockPlaceholderMismatch: Boolean,
-) {
-    println("Total Android strings: ${androidStrings.size}")
     println("Total iOS strings: ${iosStrings.size}")
 
-    val report: LocalizationReport = Analyzer.compare(androidStrings = androidStrings, iosStrings = iosStrings)
+    val androidLocaleStrings: Map<String, String> = AndroidFileParser.parse(localeBundle.androidFile.toFile())
+    println("Total Android strings: ${androidLocaleStrings.size}")
 
+    val report: LocalizationReport = Analyzer.compare(androidStrings = androidLocaleStrings, iosStrings = iosStrings)
+
+    //create logs for text copy comparisons between platforms
     writeUniqueAndroidStrings(outputFolder = outputFolder, report = report)
     writeUniqueIOSStrings(outputFolder = outputFolder, report = report)
     writeExactMatches(outputFolder = outputFolder, report = report)
     writeDifferences(outputFolder = outputFolder, report = report)
 
-    writeFixedAndroidXmlFile(
+    //create synchronized android file with shared text copied from iOS
+    writeSynchronizedAndroidFile(
         outputFolder = outputFolder,
-        androidXMLDocument = androidXMLDocument,
+        mainAndroidFile = mainBundle.androidFile,
+        localeAndroidFile = localeBundle.androidFile,
         report = report,
-        blockReplacementOnPlaceholderCountMismatch = blockPlaceholderMismatch
+        blockReplacementOnPlaceholderCountMismatch = blockReplacementOnPlaceholderCountMismatch,
+        useMainAndroidFileAsBaseTemplate = useMainAndroidFileAsBaseTemplate
     )
 }
 
-private fun writeUniqueAndroidStrings(outputFolder: File, report: LocalizationReport) {
+private fun writeUniqueAndroidStrings(outputFolder: Path, report: LocalizationReport) {
     val uniqueStrings = report.uniqueAndroidStrings
     println("Unique Android Strings: ${uniqueStrings.size}")
 
-    writeToCsv(outputFolder = outputFolder, fileName = UNIQUE_ANDROID_STRINGS_FILE) {
+    val outputFile = outputFolder.resolve(UNIQUE_ANDROID_STRINGS_FILE)
+    writeToCsv(outputFile) {
         writeNext(arrayOf("Android Key", "Android Value"))
         uniqueStrings.forEach { (key, value) ->
             writeNext(arrayOf(key, value))
@@ -132,10 +109,11 @@ private fun writeUniqueAndroidStrings(outputFolder: File, report: LocalizationRe
     }
 }
 
-private fun writeUniqueIOSStrings(outputFolder: File, report: LocalizationReport) {
+private fun writeUniqueIOSStrings(outputFolder: Path, report: LocalizationReport) {
     val uniqueStrings = report.uniqueIosStrings
     println("Unique iOS Strings: ${uniqueStrings.size}")
-    writeToCsv(outputFolder = outputFolder, fileName = UNIQUE_IOS_STRINGS_FILE) {
+    val outputFile = outputFolder.resolve(UNIQUE_IOS_STRINGS_FILE)
+    writeToCsv(outputFile) {
         writeNext(arrayOf("iOS Key", "iOS Value"))
         uniqueStrings.forEach { (key, value) ->
             writeNext(arrayOf(key, value))
@@ -143,11 +121,12 @@ private fun writeUniqueIOSStrings(outputFolder: File, report: LocalizationReport
     }
 }
 
-private fun writeExactMatches(outputFolder: File, report: LocalizationReport) {
+private fun writeExactMatches(outputFolder: Path, report: LocalizationReport) {
     val exactMatches: List<StringComparison> = report.exactMatches.sortedBy { it.key }
 
     println("Exact matches: ${exactMatches.size}")
-    writeToCsv(outputFolder = outputFolder, fileName = EXACT_MATCH_FILE) {
+    val outputFile = outputFolder.resolve(EXACT_MATCH_FILE)
+    writeToCsv(outputFile) {
         writeNext(arrayOf("Key", "Android Value", "iOS Value"))
         exactMatches.forEach {
             writeNext(arrayOf(it.key, it.androidValue, it.iosValue))
@@ -155,7 +134,7 @@ private fun writeExactMatches(outputFolder: File, report: LocalizationReport) {
     }
 }
 
-private fun writeDifferences(outputFolder: File, report: LocalizationReport) {
+private fun writeDifferences(outputFolder: Path, report: LocalizationReport) {
     val differences: List<StringComparison> = report.differences
         .sortedWith(compareBy({ !it.hasMismatchedPlaceholders }, { !it.isCaseInsensitiveMatch }, { it.key }))
 
@@ -167,7 +146,8 @@ private fun writeDifferences(outputFolder: File, report: LocalizationReport) {
     }
 
     val outputFileName = if (numberOfWarnings > 0) "$numberOfWarnings WARNINGS - $DIFFERENCES_FILE" else DIFFERENCES_FILE
-    writeToCsv(outputFolder = outputFolder, fileName = outputFileName) {
+    val outputFile = outputFolder.resolve(outputFileName)
+    writeToCsv(outputFile) {
         writeNext(arrayOf("Key", "Android Value", "iOS Value", "Has Mismatched Placeholder", "Is Case Insensitive Match"))
         differences.forEach {
             writeNext(arrayOf(it.key, it.androidValue, it.iosValue, it.hasMismatchedPlaceholders.toString(), it.isCaseInsensitiveMatch.toString()))
@@ -175,27 +155,41 @@ private fun writeDifferences(outputFolder: File, report: LocalizationReport) {
     }
 }
 
-private fun writeFixedAndroidXmlFile(
-    outputFolder: File,
-    androidXMLDocument: Document,
+private fun writeSynchronizedAndroidFile(
+    outputFolder: Path,
+    mainAndroidFile: Path,
+    localeAndroidFile: Path,
     report: LocalizationReport,
-    blockReplacementOnPlaceholderCountMismatch: Boolean
+    blockReplacementOnPlaceholderCountMismatch: Boolean,
+    useMainAndroidFileAsBaseTemplate: Boolean
 ) {
     if (report.differences.isEmpty()) {
-        println("Platform localizations match for shared keys!")
+        println("All shared text copy match between platforms. No synchronized android file is required.")
         return
     }
 
-    println("Generating corrected android strings file where text differences are replaced with ios values.")
-    val correctedAndroidStrings = AndroidTranslationGenerator.generateFixedAndroidXML(
-        document = androidXMLDocument,
+    //decide which base android file to use. either merging the other locale into the main android xml file or using the locale directly
+    val androidXMLTemplate = if (useMainAndroidFileAsBaseTemplate) {
+        println("Using the main android file as the base template. Merging $localeAndroidFile into $mainAndroidFile.")
+        val mainAndroidXML = AndroidFileParser.getDocument(mainAndroidFile.toFile())
+        val otherLocaleStrings = AndroidFileParser.parse(localeAndroidFile.toFile())
+        AndroidTranslationGenerator.mergeAndroidTranslation(mainTemplate = mainAndroidXML, otherLocale = otherLocaleStrings)
+    } else {
+        print("Using the locale file directly: $localeAndroidFile")
+        AndroidFileParser.getDocument(localeAndroidFile.toFile())
+    }
+
+    println("Generating synchronized android strings file where text differences are replaced with ios values.")
+    val correctedAndroidStrings = AndroidTranslationGenerator.generateSynchronizedAndroidXML(
+        document = androidXMLTemplate,
         report = report,
         blockReplacementOnPlaceholderCountMismatch = blockReplacementOnPlaceholderCountMismatch
     )
 
-    val outputFile = File(outputFolder, "strings.xml")
-    outputFile.recreate()
-    val fileWriter = Files.newBufferedWriter(outputFile.toPath(), Charset.forName("UTF-8"), StandardOpenOption.CREATE)
+    //save the xml document to the file system
+    val outputFile = outputFolder.resolve(localeAndroidFile.fileName)
+    outputFile.deleteIfExists()
+    val fileWriter = Files.newBufferedWriter(outputFile, Charset.forName("UTF-8"), StandardOpenOption.CREATE_NEW)
     fileWriter.use {
         val outputFormat = OutputFormat().apply {
             isExpandEmptyElements = true
@@ -207,37 +201,10 @@ private fun writeFixedAndroidXmlFile(
 }
 
 //helper function to write to csv
-private fun writeToCsv(outputFolder: File, fileName: String, lambda: CSVWriter.() -> Unit) {
-    val file = File(outputFolder, fileName)
-    file.recreate()
-    val fileWriter = Files.newBufferedWriter(file.toPath(), Charset.forName("UTF-8"), StandardOpenOption.CREATE)
-    getCsvWriter(fileWriter).use(lambda)
-}
+private fun writeToCsv(outputFile: Path, lambda: CSVWriter.() -> Unit) {
+    outputFile.deleteIfExists()
+    val fileWriter = Files.newBufferedWriter(outputFile, Charset.forName("UTF-8"), StandardOpenOption.CREATE_NEW)
 
-private fun getCsvWriter(writer: Writer): CSVWriter {
-    return CSVWriter(
-        writer,
-        '\t',
-        CSVWriter.NO_QUOTE_CHARACTER,
-        CSVWriter.DEFAULT_ESCAPE_CHARACTER,
-        CSVWriter.DEFAULT_LINE_END
-    )
-}
-
-private fun File.createDirectory() {
-    if (!this.exists()) {
-        this.mkdir()
-    }
-}
-
-private fun File.deleteDirectory() {
-    if (this.exists()) {
-        this.deleteRecursively()
-    }
-}
-
-private fun File.recreate() {
-    if (this.exists() && !this.isDirectory) {
-        this.delete()
-    }
+    val csvWriter = CSVWriter(fileWriter, '\t', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END)
+    csvWriter.use(lambda)
 }

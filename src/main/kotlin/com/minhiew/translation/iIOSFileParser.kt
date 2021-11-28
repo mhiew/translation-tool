@@ -6,10 +6,10 @@ import java.io.File
 object IOSFileParser {
     fun parse(file: File): Map<String, String> = parse(file.bufferedReader())
 
-    fun parse(fileContents: BufferedReader): Map<String, String> {
+    private fun parse(fileContents: BufferedReader): Map<String, String> {
         val result = mutableMapOf<String, String>()
-        fileContents.use {
-            it.forEachLine { line ->
+        fileContents.use { reader ->
+            reader.forEachLine { line ->
                 if (line.isNotBlank()) {
                     "\"(.+?)\" = \"(.+?)\";".toRegex().findAll(line).forEach {
                         val key = it.groupValues[1]

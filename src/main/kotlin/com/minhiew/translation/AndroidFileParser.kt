@@ -12,7 +12,7 @@ object AndroidFileParser {
 
     fun parse(file: File): Map<String, String> = parse(document = getDocument(file))
 
-    fun parse(document: Document): Map<String, String> {
+    private fun parse(document: Document): Map<String, String> {
         val stringElements = document.rootElement.elements("string")
 
         return stringElements
