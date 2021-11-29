@@ -114,6 +114,13 @@ class AnalyzerTest {
 
             assertThat(actual).isEqualTo(7)
         }
+
+        @Test
+        fun `positional specifiers are counted`() {
+            val actual = "there are 4 placeholders %1$@ %3\$s %3\$d %4\$S within this string".placeholderCount()
+
+            assertThat(actual).isEqualTo(4)
+        }
     }
 
     @Nested

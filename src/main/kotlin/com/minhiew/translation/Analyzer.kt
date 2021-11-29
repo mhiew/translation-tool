@@ -61,7 +61,7 @@ fun Map<String, String>.filterForMatchingKeysIn(other: Map<String, String>): Map
 
 
 //calculates the total number of occurrences of placeholders
-fun String.placeholderCount(): Int = totalOccurrence(input = this, placeholders = setOf("%@", "%d", "%s", "%f"))
+fun String.placeholderCount(): Int = totalOccurrence(input = this, placeholders = setOf("%@", "%d", "%s", "%f", "\$@", "\$d", "\$s", "\$f"))
 
 private fun totalOccurrence(input: String, placeholders: Set<String>): Int {
     return placeholders.fold(initial = 0) { acc, placeholder ->
