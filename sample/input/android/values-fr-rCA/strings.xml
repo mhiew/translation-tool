@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <!-- common keys -->
+    <string name="save_button_title">out of sync</string>
+    <string name="send_button_title">out of sync</string>
+    <string name="welcome_title">out of sync %@!</string>
+
+    <!-- android only keys -->
+    <string name="app_name">My App FR-CA</string>
+</resources>

@@ -1,0 +1,3 @@
+Key	Android Value	iOS Value	Has Mismatched Placeholder	Is Case Insensitive Match
+send_button_title	out of sync	Envoyer	false	false
+welcome_title	out of sync %@!	Bienvenue %@ !	false	false

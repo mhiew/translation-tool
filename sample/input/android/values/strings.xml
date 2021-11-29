@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <!-- common keys -->
+    <string name="save_button_title">Save</string>
+    <string name="send_button_title">out of sync</string>
+    <string name="welcome_title">Welcome %@!</string>
+
+    <!-- Placeholder mismatch -->
+    <string name="placeholder_mismatch">This contains two placeholders %1$@ %2$@</string>
+
+    <!-- android only keys -->
+    <string name="app_name">My App</string>
+
+    <!-- untranslatable keys are not copied between languages -->
+    <string name="playstore_url" translatable="false">https://play.google.com/store/apps/details?id=example</string>
+</resources>

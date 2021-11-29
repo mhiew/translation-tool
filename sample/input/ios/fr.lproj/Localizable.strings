@@ -1,0 +1,7 @@
+// MARK: common strings
+"save_button_title" = "Enregistrer";
+"send_button_title" = "Envoyer";
+"welcome_title" = "Bienvenue %@ !";
+
+// MARK: unique to ios
+"app_store_url" = "https://apps.apple.com/app/example/fr"

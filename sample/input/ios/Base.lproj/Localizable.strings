@@ -1,0 +1,9 @@
+// MARK: common strings
+"save_button_title" = "Save";
+"send_button_title" = "Send";
+"welcome_title" = "Welcome %@!";
+
+"placeholder_mismatch" = "This contains three placeholders %1$@ %2$@ %3$@";
+
+// MARK: unique to ios
+"app_store_url" = "https://apps.apple.com/app/example/en"
