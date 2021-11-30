@@ -38,7 +38,7 @@ If you want to override this default behaviour you can update the `blockPlacehol
 ```
 
 ## Configuration
-To use this utility you must create a corresponding [translation-tool.conf](./sample/translation-tool.conf) file[^3] within the same folder as the jar file.
+To use this utility you must create a corresponding [.conf](./sample/translation-tool.conf) file[^3].
 
 ```
 # required - path to output folder
@@ -82,8 +82,11 @@ localizations = [
 
 ## Using the Jar
 ```
-java -jar ~/translation-tool.jar 
+java -jar ~/translation-tool.jar <optional .conf file>
 ```
+
+You can optionally specify the path to your own .conf file.  
+If you do not specify the path to your .conf file it will default to accessing the **translation-tool.conf** within the same folder as the jar file.  
 
 For additional information view the [sample](./sample) folder.
 

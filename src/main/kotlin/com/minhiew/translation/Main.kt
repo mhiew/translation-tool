@@ -23,7 +23,8 @@ private const val EXACT_MATCH_FILE = "exact-matches.csv"
 private const val DIFFERENCES_FILE = "differences.csv"
 
 fun main(args: Array<String>) {
-    val config = ConfigFactory.parseFile(File(DEFAULT_CONFIG_FILE))
+    val configPath = if (args.isNotEmpty()) args[0] else DEFAULT_CONFIG_FILE
+    val config = ConfigFactory.parseFile(File(configPath))
     println("Loading $DEFAULT_CONFIG_FILE contents: $config\n")
     val appConfig = config.extract<AppConfig>()
     println("Parsed Config: $appConfig\n")
