@@ -9,11 +9,17 @@ data class AppConfig(
     val useMainAndroidFileAsBaseTemplate: Boolean = true,
     val replaceAndroidSourceFile: Boolean = false,
     val main: LocalizationBundle,
-    val localizations: List<LocalizationBundle> = emptyList()
+    val localizations: List<LocalizationBundle> = emptyList(),
+    val textReplacements: List<TextReplacement> = emptyList()
 )
 
 data class LocalizationBundle(
     val language: String,
     val androidFile: Path,
     val iosFile: Path,
+)
+
+data class TextReplacement(
+    val target: String,
+    val replacementValue: String
 )

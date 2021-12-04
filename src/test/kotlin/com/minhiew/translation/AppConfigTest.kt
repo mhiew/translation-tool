@@ -22,6 +22,10 @@ class AppConfigTest {
             localizations = listOf(
                 LocalizationBundle(language = "fr", androidFile = Path.of("values-fr/strings.xml"), iosFile = Path.of("fr.lproj/Localizable.strings")),
                 LocalizationBundle(language = "fr-CA", androidFile = Path.of("values-fr-rCA/strings.xml"), iosFile = Path.of("fr-CA.lproj/Localizable.strings")),
+            ),
+            textReplacements = listOf(
+                TextReplacement(target = "%s", replacementValue = "%@"),
+                TextReplacement(target = "\$s", replacementValue = "\$@")
             )
         )
 
@@ -55,5 +59,6 @@ class AppConfigTest {
         assertThat(actual.useMainAndroidFileAsBaseTemplate).isTrue
         assertThat(actual.cleanOutputDirectory).isFalse
         assertThat(actual.replaceAndroidSourceFile).isFalse
+        assertThat(actual.textReplacements).isEmpty()
     }
 }

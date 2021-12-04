@@ -34,13 +34,14 @@ class AndroidTranslationGeneratorTest {
         |    <!-- Comments are not stripped -->
         |    <string name="shared_key_1">ios replacement 1</string>
         |    <string name="shared_key_2">ios replacement yay</string>
-        |    <string name="shared_key_3">ios values sanitized %@, %@ and %@</string>
+        |    <string name="shared_key_3">ios values sanitized %@, %d and %@</string>
         |</resources>""".trimMargin()
 
             val actual = AndroidTranslationGenerator.generateSynchronizedAndroidXML(
                 xmlString = originalXML,
                 differences = differences,
-                blockReplacementOnPlaceholderCountMismatch = false
+                blockReplacementOnPlaceholderCountMismatch = false,
+                replacements = listOf(TextReplacement(target = "%s", replacementValue = "%@"))
             )
 
             assertThat(actual.asXML()).isEqualTo(expected)
@@ -62,7 +63,8 @@ class AndroidTranslationGeneratorTest {
             val actual = AndroidTranslationGenerator.generateSynchronizedAndroidXML(
                 xmlString = originalXML,
                 differences = differences,
-                blockReplacementOnPlaceholderCountMismatch = true
+                blockReplacementOnPlaceholderCountMismatch = true,
+                replacements = listOf(TextReplacement(target = "%s", replacementValue = "%@"))
             )
 
             assertThat(actual.asXML()).isEqualTo(expected)

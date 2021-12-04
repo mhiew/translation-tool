@@ -6,19 +6,34 @@ import java.io.StringReader
 
 object AndroidTranslationGenerator {
     //region generating an android file with synchronized translations from ios
-    fun generateSynchronizedAndroidXML(document: Document, report: LocalizationReport, blockReplacementOnPlaceholderCountMismatch: Boolean): Document {
-        return generateSynchronizedAndroidXML(document = document, differences = report.differences, blockReplacementOnPlaceholderCountMismatch = blockReplacementOnPlaceholderCountMismatch)
+    fun generateSynchronizedAndroidXML(
+        document: Document,
+        report: LocalizationReport,
+        replacements: List<TextReplacement>,
+        blockReplacementOnPlaceholderCountMismatch: Boolean
+    ): Document {
+        return generateSynchronizedAndroidXML(document = document, differences = report.differences, replacements = replacements, blockReplacementOnPlaceholderCountMismatch = blockReplacementOnPlaceholderCountMismatch)
     }
 
-    fun generateSynchronizedAndroidXML(xmlString: String, differences: List<StringComparison>, blockReplacementOnPlaceholderCountMismatch: Boolean): Document {
+    fun generateSynchronizedAndroidXML(
+        xmlString: String,
+        differences: List<StringComparison>,
+        replacements: List<TextReplacement>,
+        blockReplacementOnPlaceholderCountMismatch: Boolean
+    ): Document {
         val document = SAXReader().read(StringReader(xmlString))
-        return generateSynchronizedAndroidXML(document = document, differences = differences, blockReplacementOnPlaceholderCountMismatch = blockReplacementOnPlaceholderCountMismatch)
+        return generateSynchronizedAndroidXML(document = document, differences = differences, replacements = replacements, blockReplacementOnPlaceholderCountMismatch = blockReplacementOnPlaceholderCountMismatch)
     }
 
     // Standardizes the input android xml file with the ios localizations
     // This creates an in memory copy of the original android strings.xml document
     // It will then find any keys that have mismatched text copy and replace it with the ios version
-    private fun generateSynchronizedAndroidXML(document: Document, differences: List<StringComparison>, blockReplacementOnPlaceholderCountMismatch: Boolean): Document {
+    private fun generateSynchronizedAndroidXML(
+        document: Document,
+        differences: List<StringComparison>,
+        replacements: List<TextReplacement>,
+        blockReplacementOnPlaceholderCountMismatch: Boolean
+    ): Document {
         //modify the document replacing the text copy with the ios value for all differences
         val rootElement = document.rootElement
         differences.forEach { comparison: StringComparison ->
@@ -31,7 +46,7 @@ object AndroidTranslationGenerator {
             val stringElementXPATH = "string[@name='${comparison.key}']"
             val node = rootElement.selectSingleNode(stringElementXPATH)
             if (node != null) {
-                node.text = AndroidValueSanitizer.sanitizeInput(comparison.iosValue)
+                node.text = AndroidValueSanitizer.sanitizeInput(input = comparison.iosValue, replacements = replacements)
             }
         }
 

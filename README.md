@@ -5,11 +5,11 @@ This will audit the differences between Android and iOS strings and create a _sy
 This synchronized file contains the iOS string values for _common string identifiers_[^2] on both platforms.
 
 ## Placeholder Mapping between Platforms
-Currently the mapping of placeholders from [iOS](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Strings/Articles/formatSpecifiers.html#//apple_ref/doc/uid/TP40004265-SW1) to [Android](https://developer.android.com/reference/java/util/Formatter.html#syntax) is hardcoded within [AndroidValueSanitizer.kt](./src/main/kotlin/com/minhiew/translation/AndroidValueSanitizer.kt).
 
-_For the time being all iOS placeholders map to %@ on Android which is not standard to the Android platform_
+You can specify a list of text replacement using the `appConfig.textReplacements` option.  
+When generating the synchronized android localization file all instances of `TextReplacement.target` will be replaced with the corresponding `TextReplacement.replacementValue`.
 
-__TODO: Allow placeholder mapping from iOS to Android to be a configurable option__
+The default behaviour of the tool is to not replace any text that is not specified within the `appConfig.textReplacements`
 
 ## Handling placeholder count mismatches
 Unexpected changes in the number of text copy placeholders between platforms can create easy to miss regressions.
@@ -76,6 +76,19 @@ localizations = [
         language = "fr-CA"
         androidFile = "./input/android/values-fr-rCA/strings.xml"
         iosFile = ".input/ios/fr-CA.lproj/Localizable.strings"
+    }
+]
+
+#optional (default emptylist) - this will replace all instances of target with the corresponding replacement value when generating the output android strings file
+textReplacements = [
+    {
+        # In this case all instances of "%s" will be replaced with "%@"
+        target = "%s"
+        replacementValue = "%@"
+    },
+    {
+        target = "$s",
+        replacementValue= "$@"
     }
 ]
 ```

@@ -46,7 +46,8 @@ fun main(args: Array<String>) {
         localeBundle = appConfig.main,
         blockReplacementOnPlaceholderCountMismatch = appConfig.blockReplacementOnPlaceholderCountMismatch,
         useMainAndroidFileAsBaseTemplate = false,
-        replaceAndroidSourceFile = appConfig.replaceAndroidSourceFile
+        replaceAndroidSourceFile = appConfig.replaceAndroidSourceFile,
+        replacements = appConfig.textReplacements
     )
 
     //synchronize other locales
@@ -57,7 +58,8 @@ fun main(args: Array<String>) {
             localeBundle = it,
             blockReplacementOnPlaceholderCountMismatch = appConfig.blockReplacementOnPlaceholderCountMismatch,
             useMainAndroidFileAsBaseTemplate = appConfig.useMainAndroidFileAsBaseTemplate,
-            replaceAndroidSourceFile = appConfig.replaceAndroidSourceFile
+            replaceAndroidSourceFile = appConfig.replaceAndroidSourceFile,
+            replacements = appConfig.textReplacements
         )
     }
 }
@@ -69,6 +71,7 @@ private fun synchronizeLocales(
     blockReplacementOnPlaceholderCountMismatch: Boolean,
     useMainAndroidFileAsBaseTemplate: Boolean,
     replaceAndroidSourceFile: Boolean,
+    replacements: List<TextReplacement>,
 ) {
     val localeLanguage = localeBundle.language
     println("Synchronizing localization language: $localeLanguage for Android: ${localeBundle.androidFile} from iOS: ${localeBundle.iosFile}")
@@ -97,7 +100,8 @@ private fun synchronizeLocales(
         localeAndroidFile = localeBundle.androidFile,
         report = report,
         blockReplacementOnPlaceholderCountMismatch = blockReplacementOnPlaceholderCountMismatch,
-        useMainAndroidFileAsBaseTemplate = useMainAndroidFileAsBaseTemplate
+        useMainAndroidFileAsBaseTemplate = useMainAndroidFileAsBaseTemplate,
+        replacements = replacements
     )
 
     if (replaceAndroidSourceFile && synchronizedFile?.exists() == true) {
@@ -173,7 +177,8 @@ private fun writeSynchronizedAndroidFile(
     localeAndroidFile: Path,
     report: LocalizationReport,
     blockReplacementOnPlaceholderCountMismatch: Boolean,
-    useMainAndroidFileAsBaseTemplate: Boolean
+    useMainAndroidFileAsBaseTemplate: Boolean,
+    replacements: List<TextReplacement>
 ): Path? {
     if (report.differences.isEmpty()) {
         println("All shared text copy match between platforms. No synchronized android file is required.")
@@ -195,6 +200,7 @@ private fun writeSynchronizedAndroidFile(
     val correctedAndroidStrings = AndroidTranslationGenerator.generateSynchronizedAndroidXML(
         document = androidXMLTemplate,
         report = report,
+        replacements = replacements,
         blockReplacementOnPlaceholderCountMismatch = blockReplacementOnPlaceholderCountMismatch
     )
 
