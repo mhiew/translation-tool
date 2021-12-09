@@ -3,6 +3,7 @@ package com.minhiew.translation
 import com.opencsv.CSVWriter
 import com.typesafe.config.ConfigFactory
 import io.github.config4k.extract
+import org.dom4j.Document
 import org.dom4j.io.OutputFormat
 import org.dom4j.io.XMLWriter
 import java.io.File
@@ -82,7 +83,19 @@ private fun synchronizeLocales(
     val iosStrings: Map<String, String> = IOSFileParser.parse(localeBundle.iosFile.toFile())
     println("Total iOS strings: ${iosStrings.size}")
 
-    val androidLocaleStrings: Map<String, String> = AndroidFileParser.parse(localeBundle.androidFile.toFile())
+    //decide which base android file to use. either merging the other locale into the main android xml file or using the locale directly
+    val androidXMLTemplate = if (useMainAndroidFileAsBaseTemplate) {
+        println("Using the main android file as the base template. Merging ${localeBundle.androidFile} into ${mainBundle.androidFile}.")
+        val mainAndroidXML = AndroidFileParser.getDocument(mainBundle.androidFile.toFile())
+        val otherLocaleStrings = AndroidFileParser.parse(localeBundle.androidFile.toFile())
+        AndroidTranslationGenerator.mergeAndroidTranslation(mainTemplate = mainAndroidXML, otherLocale = otherLocaleStrings)
+    } else {
+        print("Using the locale file directly: ${localeBundle.androidFile}")
+        AndroidFileParser.getDocument(localeBundle.androidFile.toFile())
+    }
+
+    val androidLocaleStrings: Map<String, String> = AndroidFileParser.parse(androidXMLTemplate)
+
     println("Total Android strings: ${androidLocaleStrings.size}")
 
     val report: LocalizationReport = Analyzer.compare(androidStrings = androidLocaleStrings, iosStrings = iosStrings)
@@ -96,11 +109,10 @@ private fun synchronizeLocales(
     //create synchronized android file with shared text copied from iOS
     val synchronizedFile = writeSynchronizedAndroidFile(
         outputFolder = outputFolder,
-        mainAndroidFile = mainBundle.androidFile,
         localeAndroidFile = localeBundle.androidFile,
         report = report,
+        androidXMLTemplate = androidXMLTemplate,
         blockReplacementOnPlaceholderCountMismatch = blockReplacementOnPlaceholderCountMismatch,
-        useMainAndroidFileAsBaseTemplate = useMainAndroidFileAsBaseTemplate,
         replacements = replacements
     )
 
@@ -173,27 +185,15 @@ private fun writeDifferences(outputFolder: Path, report: LocalizationReport) {
 
 private fun writeSynchronizedAndroidFile(
     outputFolder: Path,
-    mainAndroidFile: Path,
     localeAndroidFile: Path,
     report: LocalizationReport,
+    androidXMLTemplate: Document,
     blockReplacementOnPlaceholderCountMismatch: Boolean,
-    useMainAndroidFileAsBaseTemplate: Boolean,
     replacements: List<TextReplacement>
 ): Path? {
     if (report.differences.isEmpty()) {
         println("All shared text copy match between platforms. No synchronized android file is required.")
         return null
-    }
-
-    //decide which base android file to use. either merging the other locale into the main android xml file or using the locale directly
-    val androidXMLTemplate = if (useMainAndroidFileAsBaseTemplate) {
-        println("Using the main android file as the base template. Merging $localeAndroidFile into $mainAndroidFile.")
-        val mainAndroidXML = AndroidFileParser.getDocument(mainAndroidFile.toFile())
-        val otherLocaleStrings = AndroidFileParser.parse(localeAndroidFile.toFile())
-        AndroidTranslationGenerator.mergeAndroidTranslation(mainTemplate = mainAndroidXML, otherLocale = otherLocaleStrings)
-    } else {
-        print("Using the locale file directly: $localeAndroidFile")
-        AndroidFileParser.getDocument(localeAndroidFile.toFile())
     }
 
     println("Generating synchronized android strings file where text differences are replaced with ios values.")
