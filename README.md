@@ -48,7 +48,7 @@ outputDirectory = "./output"
 cleanOutputDirectory = true
 
 # optional (default true) - whether we should overwrite android strings when placeholder counts do not match between platforms
-blockPlaceholderMismatch = true
+blockReplacementOnPlaceholderCountMismatch = true
 
 # optional (default true) - whether we should use the main android strings file as the base of all translations.
 # when this option is set to false it will use each corresponding language localization file as the base instead of the main one

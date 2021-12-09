@@ -16,7 +16,6 @@ object AndroidFileParser {
         val stringElements = document.rootElement.elements("string")
 
         return stringElements
-            .filterNot { it.text.isNullOrBlank() }
             .associate { element ->
                 element.attributeValue("name") to element.text.trim()
             }

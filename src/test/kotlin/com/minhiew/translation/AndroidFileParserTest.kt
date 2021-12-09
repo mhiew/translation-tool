@@ -45,4 +45,17 @@ class AndroidFileParserTest {
         assertThat(comments[1].asXML()).isEqualTo("<!-- Second Comment -->")
     }
 
+    @Test
+    fun `empty xml tags are kept`() {
+        val fixture = Path.of("src/test/resources/android-strings-with-empty.xml").toFile()
+        val expected = mapOf(
+            "has_value" to "There's text here",
+            "empty_key_1" to "",
+            "empty_key_2" to ""
+        )
+
+        val actual = AndroidFileParser.parse(fixture)
+        assertThat(actual).isEqualTo(expected)
+    }
+
 }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="has_value">There's text here</string>
+    <string name="empty_key_1"></string>
+    <string name="empty_key_2"></string>
+</resources>

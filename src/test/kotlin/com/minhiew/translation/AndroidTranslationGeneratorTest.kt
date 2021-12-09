@@ -8,7 +8,8 @@ class AndroidTranslationGeneratorTest {
     private val originalXML = """
     |<?xml version="1.0" encoding="UTF-8"?>
     |<resources>
-    |    <string name="android_only" translatable="false">wont be overriden</string>
+    |    <string name="android_only" translatable="false">wont be overridden</string>
+    |    <string name="another_android_only">wont be overridden</string>
     |
     |    <!-- Comments are not stripped -->
     |    <string name="shared_key_1">To Be Replaced 1</string>
@@ -29,7 +30,8 @@ class AndroidTranslationGeneratorTest {
             val expected = """
         |<?xml version="1.0" encoding="UTF-8"?>
         |<resources>
-        |    <string name="android_only" translatable="false">wont be overriden</string>
+        |    <string name="android_only" translatable="false">wont be overridden</string>
+        |    <string name="another_android_only">wont be overridden</string>
         |
         |    <!-- Comments are not stripped -->
         |    <string name="shared_key_1">ios replacement 1</string>
@@ -52,7 +54,8 @@ class AndroidTranslationGeneratorTest {
             val expected = """
         |<?xml version="1.0" encoding="UTF-8"?>
         |<resources>
-        |    <string name="android_only" translatable="false">wont be overriden</string>
+        |    <string name="android_only" translatable="false">wont be overridden</string>
+        |    <string name="another_android_only">wont be overridden</string>
         |
         |    <!-- Comments are not stripped -->
         |    <string name="shared_key_1">ios replacement 1</string>
@@ -79,6 +82,7 @@ class AndroidTranslationGeneratorTest {
         |<?xml version="1.0" encoding="UTF-8"?>
         |<resources>
         |    
+        |    <string name="another_android_only"></string>
         |
         |    <!-- Comments are not stripped -->
         |    <string name="shared_key_1">French Value 1</string>
@@ -106,6 +110,7 @@ class AndroidTranslationGeneratorTest {
         |<?xml version="1.0" encoding="UTF-8"?>
         |<resources>
         |    
+        |    <string name="another_android_only"></string>
         |
         |    <!-- Comments are not stripped -->
         |    <string name="shared_key_1">French Value 1</string>
@@ -132,6 +137,7 @@ class AndroidTranslationGeneratorTest {
         |<?xml version="1.0" encoding="UTF-8"?>
         |<resources>
         |    
+        |    <string name="another_android_only"></string>
         |
         |    <!-- Comments are not stripped -->
         |    <string name="shared_key_1">French Value 1</string>
@@ -145,6 +151,31 @@ class AndroidTranslationGeneratorTest {
                 "shared_key_3" to "French Value 3",
                 "key_not_in_main" to "wont be used since it's not within the main template"
             )
+
+            val actual = AndroidTranslationGenerator.mergeAndroidTranslation(
+                mainTemplateXML = originalXML,
+                otherAndroidStrings = otherAndroidStrings
+            )
+
+            assertThat(actual.asXML()).isEqualTo(expected)
+        }
+
+
+        @Test
+        fun `all main template keys are set as empty when merging an empty resource file`() {
+            val expected = """
+        |<?xml version="1.0" encoding="UTF-8"?>
+        |<resources>
+        |    
+        |    <string name="another_android_only"></string>
+        |
+        |    <!-- Comments are not stripped -->
+        |    <string name="shared_key_1"></string>
+        |    <string name="shared_key_2"></string>
+        |    <string name="shared_key_3"></string>
+        |</resources>""".trimMargin()
+
+            val otherAndroidStrings = emptyMap<String, String>()
 
             val actual = AndroidTranslationGenerator.mergeAndroidTranslation(
                 mainTemplateXML = originalXML,
